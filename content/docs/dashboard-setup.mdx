@@ -1,0 +1,203 @@
+---
+title: Dashboard Setup
+description: Set up the Scrawn Dashboard to manage API keys and monitor usage
+---
+
+The Scrawn Dashboard is a Next.js application that gives you a visual interface to manage API keys, track events, and monitor your billing infrastructure.
+
+![Scrawn Dashboard](/Dashboard.png)
+
+## Prerequisites
+
+Before setting up the dashboard, make sure you have:
+- [Scrawn backend deployed](/docs/backend-deployment) and running
+- Database URL (same PostgreSQL database as your backend)
+- Initial API key generated from [Quick Start](/docs/quick-start#5-generate-initial-api-key)
+
+## 1. Clone the Dashboard Repository
+
+<Tabs items={['HTTPS', 'Github CLI']}>
+  <Tab value="HTTPS">
+    ```bash
+    git clone https://github.com/ScrawnDotDev/Dashboard.git
+    cd Dashboard
+    ```
+  </Tab>
+  <Tab value="Github CLI">
+    ```bash
+    gh repo clone ScrawnDotDev/Dashboard
+    cd Dashboard
+    ```
+  </Tab>
+</Tabs>
+
+## 2. Install Dependencies
+
+<Tabs items={['bun', 'npm', 'yarn']}>
+  <Tab value="bun">
+    ```bash
+    bun install
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npm install
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn install
+    ```
+  </Tab>
+</Tabs>
+
+## 3. Configure Environment Variables
+
+Copy the example environment file:
+
+<Tabs items={['macOS/Linux', 'Windows (CMD)', 'Windows (PowerShell)']}>
+  <Tab value="macOS/Linux">
+    ```bash
+    cp .env.local.example .env.local
+    ```
+  </Tab>
+  <Tab value="Windows (CMD)">
+    ```cmd
+    copy .env.local.example .env.local
+    ```
+  </Tab>
+  <Tab value="Windows (PowerShell)">
+    ```powershell
+    Copy-Item .env.local.example .env.local
+    ```
+  </Tab>
+</Tabs>
+
+Edit `.env.local` with your configuration:
+
+```bash title=".env.local"
+DATABASE_URL=postgresql://user:password@localhost:5432/scrawn
+SCRAWN_BASE_URL=http://localhost:8069
+SCRAWN_KEY=scrn_YOUR_SCRAWN_KEY_HERE
+```
+
+<Callout type="info" title="Configuration Details">
+**DATABASE_URL:** Use a read-only database user for security (same database as your backend)
+
+**SCRAWN_BASE_URL:** Your deployed Scrawn backend URL or `http://localhost:8069` for local testing
+
+**SCRAWN_KEY:** The initial API key you generated in the [Quick Start guide](/docs/quick-start#5-generate-initial-api-key)
+</Callout>
+
+## 4. Run the Dashboard
+
+<Tabs items={['Development', 'Production']}>
+  <Tab value="Development">
+    Start the development server:
+    
+    <Tabs items={['bun', 'npm', 'yarn']}>
+      <Tab value="bun">
+        ```bash
+        bun run dev
+        ```
+      </Tab>
+      <Tab value="npm">
+        ```bash
+        npm run dev
+        ```
+      </Tab>
+      <Tab value="yarn">
+        ```bash
+        yarn dev
+        ```
+      </Tab>
+    </Tabs>
+
+    The dashboard will be available at `http://localhost:3000`
+  </Tab>
+  <Tab value="Production">
+    Build and start the production server:
+    
+    <Tabs items={['bun', 'npm', 'yarn']}>
+      <Tab value="bun">
+        ```bash
+        bun run build
+        bun run start
+        ```
+      </Tab>
+      <Tab value="npm">
+        ```bash
+        npm run build
+        npm run start
+        ```
+      </Tab>
+      <Tab value="yarn">
+        ```bash
+        yarn build
+        yarn start
+        ```
+      </Tab>
+    </Tabs>
+  </Tab>
+</Tabs>
+
+## Creating a New API Key
+
+Once your dashboard is running, you can easily generate new API keys:
+
+### 1. Navigate to API Keys Page
+
+Open your dashboard and click on **API Keys** in the sidebar, or navigate to `/dashboard/api-keys`.
+
+### 2. Click Create API Key
+
+Click the **Create API Key** button in the top-right corner.
+
+### 3. Fill in Details
+
+A dialog will appear asking for:
+- **API Key Name:** Give it a descriptive name (e.g., "Production API", "Development Key")
+- **Expires In (days):** How many days until the key expires (default: 365)
+
+### 4. Copy Your Key
+
+<Callout type="warn" title="Important">
+After clicking **Create API Key**, you'll see the generated key **only once**. Make sure to copy it immediately!
+</Callout>
+
+Click the copy button next to the key to copy it to your clipboard.
+
+### 5. Use Your New Key
+
+You can now use this API key in your application:
+
+```typescript
+import { Scrawn } from '@scrawn/core';
+
+const scrawn = new Scrawn({
+  apiKey: 'scrn_YOUR_NEW_KEY_HERE', // [!code highlight]
+  baseURL: process.env.SCRAWN_BASE_URL,
+});
+```
+
+## Dashboard Features
+
+The dashboard provides several views to monitor your billing infrastructure:
+
+- **Overview:** Real-time revenue, API usage, and trends
+- **API Keys:** Create, view, and manage all API keys
+- **Users:** Track user balances and activity
+- **Events:** Monitor SDK call events and costs
+
+## Next Steps
+
+Now that your dashboard is set up, start using Scrawn in your application:
+
+<Cards>
+  <Card href="/docs/scrawn-js" title="SDK Integration Guide">
+    Learn how to integrate Scrawn SDK into your application
+  </Card>
+  <Card href="/docs/api-reference" title="API Reference">
+    Explore the complete API reference and advanced features
+  </Card>
+</Cards>
