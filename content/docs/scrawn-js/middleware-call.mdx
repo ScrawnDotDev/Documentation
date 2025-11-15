@@ -87,9 +87,7 @@ whitelist: ['/api/generate', '/api/analyze', '/api/v1/*']
 blacklist: ['/health', '/api/collect-payment', '/internal/**', '**.tmp']
 ```
 
-## Framework Examples
-
-### Express.js
+## Express.js Example
 
 ```typescript
 import express from 'express';
@@ -111,80 +109,6 @@ app.use(scrawn.middlewareEventConsumer({
   }),
   blacklist: ['/health', '/api/collect-payment'],
 }));
-
-// Or apply to specific routes only
-app.use('/api/premium', scrawn.middlewareEventConsumer({
-  extractor: (req): EventPayload => ({
-    userId: req.user?.id || 'anonymous',
-    debitAmount: 50,
-  }),
-}));
-```
-
-### Fastify
-
-Fastify uses a different hook system, so we need to wrap the Express-compatible middleware manually:
-
-```typescript
-import Fastify from 'fastify';
-import { Scrawn, type EventPayload } from '@scrawn/core';
-
-const fastify = Fastify();
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
-});
-
-// Wrap the middleware for Fastify's preHandler hook
-fastify.addHook('preHandler', async (request, reply) => {
-  const middleware = scrawn.middlewareEventConsumer({
-    extractor: (req): EventPayload => ({
-      userId: (req as any).user?.id || 'anonymous',
-      debitAmount: 10,
-    }),
-  });
-  
-  await new Promise<void>((resolve, reject) => {
-    middleware(request as any, reply as any, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
-});
-```
-
-### Next.js Middleware
-
-<Callout type="warn">
-**Next.js Compatibility**: Next.js middleware doesn't support the standard Express `(req, res, next)` signature. You'll need to use [`sdkCallEventConsumer`](/docs/scrawn-js/sdk-call-event) directly instead of `middlewareEventConsumer`.
-</Callout>
-
-Use `sdkCallEventConsumer` directly in Next.js middleware:
-
-```typescript
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { Scrawn } from '@scrawn/core';
-
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
-});
-
-export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith('/api')) {
-    await scrawn.sdkCallEventConsumer({
-      userId: request.headers.get('x-user-id') || 'anonymous',
-      debitAmount: 10,
-    });
-  }
-  
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: '/api/:path*',
-};
 ```
 
 ## Advanced Patterns
@@ -320,7 +244,7 @@ app.use(async (req, res, next) => {
 
 ### 1. Place Middleware After Authentication
 ```typescript
-// ✅ Good - User info is available
+//  Good - User info is available
 app.use(authMiddleware);
 app.use(scrawn.middlewareEventConsumer({
   extractor: (req): EventPayload => ({

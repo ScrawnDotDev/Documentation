@@ -115,36 +115,10 @@ try {
 
 ## Best Practices
 
-### 1. Don't Await Events Inline
-To avoid blocking your response, start event tracking early and await at the end:
-
-```typescript title="app.ts"
-app.post('/api/generate', async (req, res) => {
-  await scrawn.sdkCallEventConsumer({ // [!code --]
-    userId: req.user.id, // [!code --]
-    debitAmount: 100, // [!code --]
-  }); // [!code --]
-  // Start event tracking (don't await yet) // [!code ++]
-  const trackingPromise = scrawn.sdkCallEventConsumer({ // [!code ++]
-    userId: req.user.id, // [!code ++]
-    debitAmount: 100, // [!code ++]
-  }); // [!code ++]
-  
-  // Do your actual work
-  const result = await generateContent(req.body.prompt);
-  
-  // Wait for tracking to complete before responding // [!code ++]
-  await trackingPromise; // [!code ++]
-  
-  res.json({ result });
-});
-```
-
-### 2. Track Events After Service Delivery
+### Track Events After Service Delivery
 Track usage as soon as the service is consumed:
 
 ```typescript
-// Good - Track immediately after service delivery
 const result = await processImage(imageData);
 
 if (result.success) {

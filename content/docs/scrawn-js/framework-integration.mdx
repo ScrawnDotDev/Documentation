@@ -13,8 +13,6 @@ This guide provides detailed integration examples for popular JavaScript framewo
 
 ## Next.js
 
-### App Router (Recommended)
-
 ```typescript title="app/api/generate/route.ts"
 import { Scrawn } from '@scrawn/core';
 import { NextRequest, NextResponse } from 'next/server';
@@ -46,43 +44,6 @@ export async function POST(req: NextRequest) {
   
   return NextResponse.json(result);
 }
-```
-
-### Middleware Integration
-
-```typescript title="middleware.ts"
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { Scrawn } from '@scrawn/core';
-import { getToken } from 'next-auth/jwt';
-
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
-});
-
-export async function middleware(request: NextRequest) {
-  // Only track API routes
-  if (!request.nextUrl.pathname.startsWith('/api')) {
-    return NextResponse.next();
-  }
-
-  const token = await getToken({ req: request });
-  
-  if (token?.sub) {
-    // Track in background, don't block request
-    scrawn.sdkCallEventConsumer({
-      userId: token.sub,
-      debitAmount: 10,
-    }).catch(err => console.error('Failed to track:', err));
-  }
-
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: '/api/:path*',
-};
 ```
 
 ## Express.js
@@ -222,110 +183,4 @@ export const trackUsage = t.middleware(async ({ ctx, next }) => {
 export const protectedProcedure = t.procedure.use(trackUsage);
 ```
 
-## Remix
 
-```typescript title="app/routes/api.generate.tsx"
-import { json, type ActionFunctionArgs } from '@remix-run/node';
-import { Scrawn } from '@scrawn/core';
-import { requireUser } from '~/lib/auth.server';
-
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
-});
-
-export async function action({ request }: ActionFunctionArgs) {
-  const user = await requireUser(request);
-
-  // Start tracking (don't await yet)
-  const trackingPromise = scrawn.sdkCallEventConsumer({
-    userId: user.id,
-    debitAmount: 100,
-  });
-
-  // Process request
-  const result = await generateContent(await request.json());
-  
-  // Wait for tracking
-  await trackingPromise;
-  
-  return json(result);
-}
-```
-
-## SvelteKit
-
-```typescript title="src/routes/api/generate/+server.ts"
-import { json, error } from '@sveltejs/kit';
-import { Scrawn } from '@scrawn/core';
-import type { RequestHandler } from './$types';
-
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
-});
-
-export const POST: RequestHandler = async ({ request, locals }) => {
-  const user = locals.user;
-  
-  if (!user) {
-    throw error(401, 'Unauthorized');
-  }
-
-  // Start tracking (don't await yet)
-  const trackingPromise = scrawn.sdkCallEventConsumer({
-    userId: user.id,
-    debitAmount: 100,
-  });
-
-  // Process request
-  const result = await generateContent(await request.json());
-  
-  // Wait for tracking
-  await trackingPromise;
-  
-  return json(result);
-};
-```
-
-## Hono (Cloudflare Workers)
-
-```typescript title="src/index.ts"
-import { Hono } from 'hono';
-import { Scrawn, type EventPayload } from '@scrawn/core';
-
-const app = new Hono();
-
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
-});
-
-// Use Scrawn middleware
-app.use('/api/*', async (c, next) => {
-  const middleware = scrawn.middlewareEventConsumer({
-    extractor: (req): EventPayload | null => {
-      const user = (req as any).user;
-      if (!user) return null;
-      
-      return {
-        userId: user.id,
-        debitAmount: 10,
-      };
-    },
-  });
-  
-  await new Promise<void>((resolve) => {
-    middleware(c.req.raw as any, {} as any, () => resolve());
-  });
-  
-  await next();
-});
-
-app.post('/api/generate', async (c) => {
-  const result = await generateContent(await c.req.json());
-  return c.json(result);
-});
-
-export default app;
-```

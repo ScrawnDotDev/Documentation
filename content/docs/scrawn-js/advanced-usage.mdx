@@ -31,34 +31,7 @@ await Promise.all(
 );
 ```
 
-## Retry Logic
 
-Implement robust retry logic with exponential backoff:
-
-```typescript
-async function trackWithRetry(
-  userId: string,
-  debitAmount: number,
-  maxRetries = 3
-) {
-  let lastError: Error;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await scrawn.sdkCallEventConsumer({ userId, debitAmount });
-      return; // Success
-    } catch (error) {
-      lastError = error as Error;
-      
-      // Exponential backoff
-      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-  
-  throw lastError;
-}
-```
 
 ## Async Event Tracking Pattern
 
@@ -117,75 +90,7 @@ usageQueue.process(async (job) => {
 });
 ```
 
-## Path Matching Utilities
-
-The SDK exports a `matchPath` utility for custom path matching logic:
-
-```typescript
-import { matchPath } from '@scrawn/core';
-
-// Use in your own middleware
-const shouldTrack = (path: string): boolean => {
-  // Exact match
-  if (matchPath(path, '/api/generate')) return true;
-  
-  // Single segment wildcard
-  if (matchPath(path, '/api/v1/*')) return true;
-  
-  // Multi-segment wildcard
-  if (matchPath(path, '/api/**')) return true;
-  
-  return false;
-};
-```
-
-## Monitoring and Analytics
-
-Track usage patterns and errors for observability:
-
-```typescript
-async function trackUsageWithAnalytics(userId: string, debitAmount: number) {
-  const startTime = Date.now();
-  
-  try {
-    await scrawn.sdkCallEventConsumer({ userId, debitAmount });
-    
-    console.log('Usage tracked', {
-      userId,
-      amount: debitAmount,
-      duration: Date.now() - startTime,
-      status: 'success',
-    });
-  } catch (error) {
-    console.error('Usage tracking failed', {
-      userId,
-      amount: debitAmount,
-      duration: Date.now() - startTime,
-      error: (error as Error).message,
-    });
-    
-    throw error;
-  }
-}
-```
-
-## Error Handling
-
-The SDK throws errors with detailed validation messages:
-
-```typescript
-try {
-  await scrawn.sdkCallEventConsumer({
-    userId: '',  // Invalid: empty string
-    debitAmount: -5,  // Invalid: negative number
-  });
-} catch (error) {
-  console.error(error.message);
-  // "Payload validation failed: userId: must be a non-empty string, debitAmount: must be a positive number"
-}
-```
-
-### Graceful Degradation
+## Graceful Error Handling
 
 Allow your app to continue functioning even if tracking fails:
 
@@ -203,56 +108,22 @@ async function trackUsageGracefully(userId: string, debitAmount: number) {
 }
 ```
 
-## Multi-Tenant Support
+## Reuse SDK Instance
 
-Create separate SDK instances for different tenants:
+Always create the SDK instance once and reuse it:
 
-```typescript
-interface TenantConfig {
-  scrawnKey: string;
-  scrawnBaseUrl: string;
-}
+```typescript title="lib/scrawn.ts"
+import { Scrawn } from '@scrawn/core';
 
-const scrawnInstances = new Map<string, Scrawn>();
-
-function getScrawnForTenant(tenantId: string, config: TenantConfig): Scrawn {
-  if (!scrawnInstances.has(tenantId)) {
-    scrawnInstances.set(tenantId, new Scrawn({
-      apiKey: config.scrawnKey as `scrn_${string}`,
-      baseURL: config.scrawnBaseUrl,
-    }));
-  }
-  
-  return scrawnInstances.get(tenantId)!;
-}
-
-// Usage
-const scrawn = getScrawnForTenant('tenant-1', {
-  scrawnKey: process.env.TENANT_1_KEY!,
-  scrawnBaseUrl: process.env.SCRAWN_BASE_URL!,
-});
-
-await scrawn.sdkCallEventConsumer({ userId: 'user-123', debitAmount: 10 });
-```
-
-## Performance Optimization
-
-### Reuse SDK Instance
-
-```typescript title="scrawn.ts"
-// Create once, reuse everywhere
-const scrawn = new Scrawn({
+export const scrawn = new Scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
   baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
 });
-
-export default scrawn;
 ```
 
-```typescript title="bad-example.ts"
-// Don't create new instances repeatedly // [!code --]
-function trackEvent() { // [!code --]
-  const scrawn = new Scrawn({ /* ... */ }); // [!code --]
-  await scrawn.sdkCallEventConsumer({ /* ... */ }); // [!code --]
-} // [!code --]
+```typescript title="app/api/route.ts"
+import { scrawn } from '@/lib/scrawn';
+
+// Use the shared instance
+await scrawn.sdkCallEventConsumer({ userId: 'user-123', debitAmount: 10 });
 ```
