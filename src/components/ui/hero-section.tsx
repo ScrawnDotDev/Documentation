@@ -45,21 +45,32 @@ export const HeroSection = () => {
                         </div>
                     </div>
 
-                    <div className="mx-auto -mt-16 max-w-7xl [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
-                        <div className="[perspective:1200px] [mask-image:linear-gradient(to_right,black_50%,transparent_100%)] -mr-16 pl-16 lg:-mr-56 lg:pl-56">
-                            <div className="[transform:rotateX(20deg);]">
-                                <div className="lg:h-[44rem] relative skew-x-[.36rad]">
-                                    <img
-                                        className="rounded-[--radius] z-[2] relative border border-fd-border"
-                                        src="/Hero.png"
-                                        alt="Scrawn dashboard - track events, manage API keys, and process payments"
-                                        width={2880}
-                                        height={2074}
+                    <div className="mx-auto -mt-16 max-w-7xl overflow-visible">
+                        <div className="[perspective:1200px] -mr-16 pl-16 lg:-mr-56 lg:pl-34">
+                            <div className="relative skew-x-[.36rad]">
+                                <img
+                                    src="/Hero.png"
+                                    alt="Scrawn"
+                                    width={2880}
+                                    height={2074}
+                                    className="
+                                        rounded-[--radius]
+                                        z-[2]
+                                        relative
+                                        border border-fd-border
+                                        [mask-image:linear-gradient(to_bottom,black_40%,transparent_100%),linear-gradient(to_right,black_55%,transparent_100%)]
+                                        [mask-size:100%_100%]
+                                        [mask-position:center]
+                                        [mask-repeat:no-repeat]
+                                        [-webkit-mask-composite:source-in]
+                                        [mask-composite:intersect]
+                                    "
                                     />
-                                </div>
+
                             </div>
                         </div>
                     </div>
+
                 </section>
                 <section className="bg-fd-background relative z-10 py-24">
                     <div className="m-auto max-w-6xl px-6">
