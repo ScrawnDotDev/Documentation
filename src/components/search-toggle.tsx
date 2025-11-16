@@ -14,7 +14,7 @@ interface SearchToggleProps
 
 export function SearchToggle({
   hideIfDisabled,
-  size = 'icon-sm',
+  size = 'sm',
   color = 'ghost',
   ...props
 }: SearchToggleProps) {
@@ -27,7 +27,6 @@ export function SearchToggle({
       className={cn(
         buttonVariants({
           size,
-          color,
         }),
         props.className,
       )}

@@ -71,8 +71,7 @@ export function CollapsibleControl() {
       <SidebarCollapseTrigger
         className={cn(
           buttonVariants({
-            color: 'ghost',
-            size: 'icon-sm',
+            size: 'sm',
             className: 'rounded-lg',
           }),
         )}

@@ -165,8 +165,7 @@ export function DocsLayout({
                   item={item}
                   className={cn(
                     buttonVariants({
-                      size: 'icon-sm',
-                      color: 'ghost',
+                      size: 'sm',
                       className: 'p-2',
                     }),
                   )}
@@ -189,8 +188,7 @@ export function DocsLayout({
             <SidebarTrigger
               className={cn(
                 buttonVariants({
-                  color: 'ghost',
-                  size: 'icon-sm',
+                  size: 'sm',
                   className: 'p-2',
                 }),
               )}
@@ -221,8 +219,7 @@ export function DocsLayout({
               <SidebarCollapseTrigger
                 className={cn(
                   buttonVariants({
-                    color: 'ghost',
-                    size: 'icon-sm',
+                    size: 'sm',
                     className: 'mb-auto text-fd-muted-foreground',
                   }),
                 )}
@@ -257,7 +254,7 @@ export function DocsLayout({
                   key={i}
                   item={item}
                   className={cn(
-                    buttonVariants({ size: 'icon-sm', color: 'ghost' }),
+                    buttonVariants({ size: 'sm' }),
                   )}
                   aria-label={item.label}
                 >
@@ -314,8 +311,7 @@ export function DocsLayout({
                 <SidebarTrigger
                   className={cn(
                     buttonVariants({
-                      color: 'ghost',
-                      size: 'icon-sm',
+                      size: 'sm',
                       className: 'p-2',
                     }),
                   )}

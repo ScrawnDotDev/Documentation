@@ -5,13 +5,6 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-const menuItems = [
-    { name: 'Features', href: '/docs' },
-    { name: 'API Reference', href: '/docs/api-reference' },
-    { name: 'Quick Start', href: '/docs/quick-start' },
-    { name: 'Dashboard', href: '/docs/dashboard-setup' },
-]
-
 export const HeroSection = () => {
     return (
         <div>
