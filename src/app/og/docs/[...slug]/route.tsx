@@ -16,7 +16,7 @@ export async function GET(
   return new ImageResponse(
     (
       <DefaultImage
-        title={page.data.title}
+        title={`${page.data.title} | Scrawn`}
         description={page.data.description}
         site="Scrawn Docs"
       />

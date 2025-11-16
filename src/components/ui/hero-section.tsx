@@ -84,16 +84,6 @@ export const HeroSection = () => {
                             <div className="flex items-center gap-2">
                                 <img
                                     className="h-7 w-fit dark:invert"
-                                    src="https://cdn.simpleicons.org/nodedotjs/black"
-                                    alt=""
-                                    height="28"
-                                    width="auto"
-                                />
-                                <span className="text-sm font-semibold text-fd-foreground">Node.js</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <img
-                                    className="h-7 w-fit dark:invert"
                                     src="https://cdn.simpleicons.org/nextdotjs/black"
                                     alt=""
                                     height="28"
