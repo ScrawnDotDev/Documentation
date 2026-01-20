@@ -43,6 +43,7 @@ Track billable usage events.
 |-----------|------|----------|-------------|
 | `userId` | `string` | Yes | Unique user identifier |
 | `debitAmount` | `number` | Yes | Amount to debit from user's balance |
+| `tags` | `string[]` | No | Array of string tags to categorize the event |
 
 **Returns:** `Promise<void>`
 
@@ -52,6 +53,7 @@ Track billable usage events.
 await scrawn.sdkCallEventConsumer({
   userId: 'user-123',
   debitAmount: 100,
+  tags: ['api-call', 'premium'],
 });
 ```
 
@@ -439,12 +441,14 @@ All backend errors follow the gRPC Connect error format:
 interface EventPayload {
   userId: string;
   debitAmount: number;
+  tags?: string[];
 }
 ```
 
 Validated using Zod schema:
 - `userId`: Must be a non-empty string
 - `debitAmount`: Must be a positive number
+- `tags`: Optional array of strings for categorizing events
 
 ### MiddlewareRequest
 

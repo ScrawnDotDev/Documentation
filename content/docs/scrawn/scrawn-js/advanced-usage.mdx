@@ -21,9 +21,9 @@ const scrawn = new Scrawn({
 
 // Track multiple events in parallel
 const events = [
-  { userId: 'user-1', debitAmount: 100 },
-  { userId: 'user-2', debitAmount: 200 },
-  { userId: 'user-3', debitAmount: 150 },
+  { userId: 'user-1', debitAmount: 100, tags: ['api-call'] },
+  { userId: 'user-2', debitAmount: 200, tags: ['api-call'] },
+  { userId: 'user-3', debitAmount: 150, tags: ['api-call'] },
 ];
 
 await Promise.all(
@@ -47,6 +47,7 @@ app.post('/api/generate', async (req, res) => {
   const trackingPromise = scrawn.sdkCallEventConsumer({ // [!code ++]
     userId: req.user.id, // [!code ++]
     debitAmount: 100, // [!code ++]
+    tags: ['generation'], // [!code ++]
   }); // [!code ++]
   
   // Do your work
@@ -76,6 +77,7 @@ app.post('/api/action', async (req, res) => {
   await usageQueue.add({
     userId: req.user.id,
     debitAmount: 10,
+    tags: ['api-action'],
   });
   
   // Process request immediately
@@ -85,8 +87,8 @@ app.post('/api/action', async (req, res) => {
 
 // Consumer: Process queue in background
 usageQueue.process(async (job) => {
-  const { userId, debitAmount } = job.data;
-  await scrawn.sdkCallEventConsumer({ userId, debitAmount });
+  const { userId, debitAmount, tags } = job.data;
+  await scrawn.sdkCallEventConsumer({ userId, debitAmount, tags });
 });
 ```
 
@@ -125,5 +127,9 @@ export const scrawn = new Scrawn({
 import { scrawn } from '@/lib/scrawn';
 
 // Use the shared instance
-await scrawn.sdkCallEventConsumer({ userId: 'user-123', debitAmount: 10 });
+await scrawn.sdkCallEventConsumer({ 
+  userId: 'user-123', 
+  debitAmount: 10,
+  tags: ['api-call'],
+});
 ```

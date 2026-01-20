@@ -44,6 +44,12 @@ await scrawn.sdkCallEventConsumer({
 - **Validation:** Must be a positive number
 - **Example:** `100`, `10.50`, `1000`
 
+### `tags` (optional)
+- **Type:** `string[]`
+- **Description:** Array of string tags to categorize and label the event. Use tags to organize events for analytics, filtering, and reporting purposes.
+- **Validation:** Must be an array of strings (if provided)
+- **Example:** `["api-call", "premium"]`, `["ai-generation", "gpt-4"]`, `["storage", "upload"]`
+
 ## Response
 
 The method returns a promise that resolves to `void` when the event is successfully tracked. Errors are thrown if validation fails or the gRPC call fails.
@@ -59,6 +65,7 @@ These examples show how `sdkCallEventConsumer` can be used under abstractions fo
 await scrawn.sdkCallEventConsumer({
   userId: 'user-123',
   debitAmount: 0.10,
+  tags: ['api-call', 'rest-api'],
 });
 ```
 
@@ -73,6 +80,7 @@ async function trackTokenUsage(userId: string, tokensUsed: number) {
   await scrawn.sdkCallEventConsumer({
     userId,
     debitAmount: totalCost,
+    tags: ['ai-generation', 'tokens', 'gpt-4'],
   });
 }
 
@@ -91,6 +99,7 @@ async function trackStorageUsage(userId: string, fileSizeMB: number) {
   await scrawn.sdkCallEventConsumer({
     userId,
     debitAmount: totalCost,
+    tags: ['storage', 'file-upload'],
   });
 }
 
@@ -114,6 +123,40 @@ try {
 ```
 
 ## Best Practices
+
+### Using Tags Effectively
+
+Tags help you organize and analyze your usage events. Here are some best practices:
+
+```typescript
+// Categorize by service type
+await scrawn.sdkCallEventConsumer({
+  userId: 'user-123',
+  debitAmount: 5.00,
+  tags: ['image-generation', 'ai', 'premium-tier'],
+});
+
+// Track different API endpoints
+await scrawn.sdkCallEventConsumer({
+  userId: 'user-456',
+  debitAmount: 0.50,
+  tags: ['api-call', 'analytics', 'v2'],
+});
+
+// Combine tags for detailed categorization
+await scrawn.sdkCallEventConsumer({
+  userId: 'user-789',
+  debitAmount: 2.00,
+  tags: ['compute', 'batch-processing', 'high-priority'],
+});
+```
+
+**Tagging Tips:**
+- Use consistent, lowercase tag names
+- Be specific but concise (e.g., `gpt-4` instead of `ai-model-gpt-4-turbo`)
+- Use tags for filtering and analytics
+- Combine multiple tags for fine-grained categorization
+- Examples of good tags: `api-call`, `ai-generation`, `storage`, `premium`, `batch-job`
 
 ### Track Events After Service Delivery
 Track usage as soon as the service is consumed:

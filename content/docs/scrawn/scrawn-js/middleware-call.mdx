@@ -28,6 +28,7 @@ app.use(scrawn.middlewareEventConsumer({
   extractor: (req): EventPayload => ({
     userId: req.headers['x-user-id'] as string,
     debitAmount: req.body?.cost || 1,
+    tags: ['api-call'],
   }),
 }));
 ```
@@ -40,14 +41,15 @@ app.use(scrawn.middlewareEventConsumer({
 
 ### `extractor` (required)
 - **Type:** `(request) => EventPayload | Promise<EventPayload> | null | Promise<null>`
-- **Description:** Function to extract userId and debitAmount from the request. Return `null` to skip tracking.
-- **Returns:** [EventPayload](/docs/scrawn/api-reference#eventpayload) object with `userId` (string) and `debitAmount` (number), or `null`
+- **Description:** Function to extract userId, debitAmount, and optionally tags from the request. Return `null` to skip tracking.
+- **Returns:** [EventPayload](/docs/scrawn/api-reference#eventpayload) object with `userId` (string), `debitAmount` (number), and optional `tags` (string[]), or `null`
 
 **Basic extractor:**
 ```typescript
 extractor: (req) => ({
   userId: req.user.id,
   debitAmount: 10,
+  tags: ['api-call'],
 })
 ```
 
@@ -55,7 +57,11 @@ extractor: (req) => ({
 ```typescript
 extractor: async (req) => {
   const user = await getUser(req);
-  return { userId: user.id, debitAmount: calculateCost(req) };
+  return { 
+    userId: user.id, 
+    debitAmount: calculateCost(req),
+    tags: ['api-call', user.tier],
+  };
 }
 ```
 
@@ -63,7 +69,11 @@ extractor: async (req) => {
 ```typescript
 extractor: (req) => {
   if (!req.user) return null;
-  return { userId: req.user.id, debitAmount: 1 };
+  return { 
+    userId: req.user.id, 
+    debitAmount: 1,
+    tags: ['api-request'],
+  };
 }
 ```
 
@@ -106,6 +116,7 @@ app.use(scrawn.middlewareEventConsumer({
   extractor: (req): EventPayload => ({
     userId: req.headers['x-user-id'] as string,
     debitAmount: req.body?.cost || 1,
+    tags: ['api-call'],
   }),
   blacklist: ['/health', '/api/collect-payment'],
 }));
@@ -121,13 +132,23 @@ app.use(scrawn.middlewareEventConsumer({
     const endpoint = req.path || req.url || '';
     
     let debitAmount = 1;
-    if (endpoint.startsWith('/api/ai')) debitAmount = 100;
-    else if (endpoint.startsWith('/api/premium')) debitAmount = 50;
-    else if (endpoint.startsWith('/api/standard')) debitAmount = 10;
+    let tags = ['api-call'];
+    
+    if (endpoint.startsWith('/api/ai')) {
+      debitAmount = 100;
+      tags = ['api-call', 'ai-generation'];
+    } else if (endpoint.startsWith('/api/premium')) {
+      debitAmount = 50;
+      tags = ['api-call', 'premium'];
+    } else if (endpoint.startsWith('/api/standard')) {
+      debitAmount = 10;
+      tags = ['api-call', 'standard'];
+    }
     
     return {
       userId: req.headers['x-user-id'] as string,
       debitAmount,
+      tags,
     };
   },
 }));
