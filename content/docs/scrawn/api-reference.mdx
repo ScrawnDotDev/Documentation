@@ -5,6 +5,10 @@ description: Complete reference for Scrawn SDK and gRPC API
 
 ## SDK API
 
+<Callout type="info">
+**NEW!** Tags for pricing - Use `debitTag` when you want the backend to look up a price (instead of passing a raw amount).
+</Callout>
+
 ### Constructor
 
 ```typescript
@@ -42,7 +46,8 @@ Track billable usage events.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `userId` | `string` | Yes | Unique user identifier |
-| `debitAmount` | `number` | Yes | Amount to debit from user's balance |
+| `debitAmount` | `number` | No | Amount to debit from user's balance |
+| `debitTag` | `string` | No | Price tag configured in your backend |
 
 **Returns:** `Promise<void>`
 
@@ -53,11 +58,18 @@ await scrawn.sdkCallEventConsumer({
   userId: 'user-123',
   debitAmount: 100,
 });
+
+await scrawn.sdkCallEventConsumer({
+  userId: 'user-123',
+  debitTag: 'STANDARD_API_CALL',
+});
 ```
 
 **Validation:**
 - `userId` must be a non-empty string
+- Exactly one of `debitAmount` or `debitTag` must be provided
 - `debitAmount` must be a positive number
+- `debitTag` must be a non-empty string
 
 **Throws:**
 - `Error` with detailed validation message on invalid payload
@@ -76,7 +88,7 @@ Creates Express-compatible middleware that automatically tracks usage for API re
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `extractor` | `PayloadExtractor` | Yes | Function to extract `userId` and `debitAmount` from request |
+| `extractor` | `PayloadExtractor` | Yes | Function to extract `userId` and debit info from request |
 | `whitelist` | `string[]` | No | Array of endpoint patterns to track (takes precedence over blacklist) |
 | `blacklist` | `string[]` | No | Array of endpoint patterns to exclude from tracking |
 
@@ -170,7 +182,11 @@ message RegisterEventRequest {
 
 message SDKCall {
   SDKCallType sdkCallType = 1;
-  float debitAmount = 2;
+
+  oneof debit {
+    float amount = 2;
+    string tag = 3;
+  }
 }
 
 enum EventType {
@@ -209,7 +225,10 @@ const response = await client.registerEvent({
     case: 'sdkCall',
     value: {
       sdkCallType: SDKCallType.RAW,
-      debitAmount: 100
+      debit: {
+        case: 'amount',
+        value: 100,
+      },
     }
   }
 });
@@ -438,13 +457,16 @@ All backend errors follow the gRPC Connect error format:
 ```typescript
 interface EventPayload {
   userId: string;
-  debitAmount: number;
+  debitAmount?: number;
+  debitTag?: string;
 }
 ```
 
 Validated using Zod schema:
 - `userId`: Must be a non-empty string
+- Exactly one of `debitAmount` or `debitTag` must be provided
 - `debitAmount`: Must be a positive number
+- `debitTag`: Must be a non-empty string
 
 ### MiddlewareRequest
 
@@ -490,7 +512,7 @@ type PayloadExtractor = (
 ) => EventPayload | Promise<EventPayload> | null | Promise<null>;
 ```
 
-Function that extracts `userId` and `debitAmount` from a request. Return `null` to skip tracking.
+Function that extracts `userId` and either `debitAmount` or `debitTag` from a request. Return `null` to skip tracking.
 
 ### MiddlewareEventConfig
 

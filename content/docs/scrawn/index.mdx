@@ -30,6 +30,11 @@ await scrawn.sdkCallEventConsumer({
   userId: 'uuid', 
   debitAmount: 69.69,
 });
+
+await scrawn.sdkCallEventConsumer({ 
+  userId: 'uuid', 
+  debitTag: 'STANDARD_API_CALL',
+});
 ```
 
 <Callout type="success">

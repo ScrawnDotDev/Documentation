@@ -236,10 +236,16 @@ const scrawn = new Scrawn({
   baseURL: process.env.SCRAWN_BASE_URL, // [!code highlight]
 });
 
-// Track usage
+// Track usage with a direct amount
 await scrawn.sdkCallEventConsumer({ 
   userId: '0a1e38a5-e2f3-450f-9796-59ad406d93dc', 
   debitAmount: 5000,
+});
+
+// Or track usage with a backend price tag
+await scrawn.sdkCallEventConsumer({ 
+  userId: '0a1e38a5-e2f3-450f-9796-59ad406d93dc', 
+  debitTag: 'STANDARD_API_CALL',
 });
   
 ```

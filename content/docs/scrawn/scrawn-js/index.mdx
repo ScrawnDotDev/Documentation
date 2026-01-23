@@ -47,10 +47,16 @@ const scrawn = new Scrawn({
   baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
 });
 
-// Track a billable event
+// Track a billable event with a direct amount
 await scrawn.sdkCallEventConsumer({
   userId: 'user-123',
   debitAmount: 100,
+});
+
+// Track a billable event using a backend price tag
+await scrawn.sdkCallEventConsumer({
+  userId: 'user-123',
+  debitTag: 'STANDARD_API_CALL',
 });
 ```
 
