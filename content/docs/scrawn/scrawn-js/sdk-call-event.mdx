@@ -25,10 +25,15 @@ await scrawn.sdkCallEventConsumer({
   userId: 'user-123',
   debitAmount: 100,
 });
+
+await scrawn.sdkCallEventConsumer({
+  userId: 'user-123',
+  debitTag: 'STANDARD_API_CALL',
+});
 ```
 
 <Callout type="info">
-**In simple terms:** Charge user `user-123` an amount of `100`.
+**In simple terms:** Charge user `user-123` an amount of `100` or a backend price tag.
 </Callout>
 
 ## Parameters
@@ -38,11 +43,21 @@ await scrawn.sdkCallEventConsumer({
 - **Description:** The unique identifier of the user consuming the event
 - **Validation:** Must be a non-empty string
 
-### `debitAmount` (required)
+### `debitAmount` (optional)
 - **Type:** `number`
 - **Description:** Amount to debit from user's balance. Use the same currency unit configured in your LemonSqueezy dashboard (dollars, cents, etc.)
 - **Validation:** Must be a positive number
 - **Example:** `100`, `10.50`, `1000`
+
+### `debitTag` (optional)
+- **Type:** `string`
+- **Description:** Price tag configured in your backend to look up billing amount
+- **Validation:** Must be a non-empty string
+- **Example:** `STANDARD_API_CALL`, `PREMIUM_FEATURE`
+
+<Callout type="info">
+**Exactly one of `debitAmount` or `debitTag` must be provided.**
+</Callout>
 
 ## Response
 

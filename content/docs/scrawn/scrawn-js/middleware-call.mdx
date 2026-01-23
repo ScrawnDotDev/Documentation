@@ -13,7 +13,7 @@ The `middlewareEventConsumer` method creates Express-compatible middleware that 
 
 ## How It Works
 
-The middleware intercepts HTTP requests, extracts userId and debitAmount via your custom extractor function, and automatically tracks the usage event. It supports whitelist/blacklist patterns with wildcards for fine-grained control.
+The middleware intercepts HTTP requests, extracts userId and debit info (debitAmount or debitTag) via your custom extractor function, and automatically tracks the usage event. It supports whitelist/blacklist patterns with wildcards for fine-grained control.
 
 ```typescript
 import { Scrawn, type EventPayload } from '@scrawn/core';
@@ -33,21 +33,29 @@ app.use(scrawn.middlewareEventConsumer({
 ```
 
 <Callout type="info">
-**In simple terms:** When a request comes in, grab the `userId` from the request headers and the `debitAmount` from the request body, then charge that user that amount.
+**In simple terms:** When a request comes in, grab the `userId` from the request headers and the debit info (`debitAmount` or `debitTag`) from the request, then charge that user.
 </Callout>
 
 ## Configuration
 
 ### `extractor` (required)
 - **Type:** `(request) => EventPayload | Promise<EventPayload> | null | Promise<null>`
-- **Description:** Function to extract userId and debitAmount from the request. Return `null` to skip tracking.
-- **Returns:** [EventPayload](/docs/scrawn/api-reference#eventpayload) object with `userId` (string) and `debitAmount` (number), or `null`
+- **Description:** Function to extract userId and debit info from the request. Return `null` to skip tracking.
+- **Returns:** [EventPayload](/docs/scrawn/api-reference#eventpayload) object with `userId` (string) and either `debitAmount` (number) or `debitTag` (string), or `null`
 
 **Basic extractor:**
 ```typescript
 extractor: (req) => ({
   userId: req.user.id,
   debitAmount: 10,
+})
+```
+
+**Tag-based extractor:**
+```typescript
+extractor: (req) => ({
+  userId: req.user.id,
+  debitTag: 'STANDARD_API_CALL',
 })
 ```
 
