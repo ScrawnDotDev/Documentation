@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/solar.css";
+@import "fumadocs-ui/css/preset.css";
+
+@theme {
+    --color-fd-primary: #feaa02; /* Soft yellowish-orange - more yellow, less saturated */
+    --color-fd-primary-foreground: oklch(1 0 0);
+}
+
+.dark {
+    --color-fd-primary: #feaa02; /* Warm honey-orange for dark mode */
+    --color-fd-primary-foreground: oklch(0.2 0 0);
+}
