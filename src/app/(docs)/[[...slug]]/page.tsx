@@ -57,7 +57,7 @@ export async function generateMetadata(
   if (!page) notFound();
 
   return {
-    title: `${page.data.title} | Scrawn`,
+    title: page.data.title,
     description: page.data.description,
     alternates: {
       canonical: `https://docs.scrawn.dev${page.url}`,
