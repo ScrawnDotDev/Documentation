@@ -181,7 +181,7 @@ Authorization: Bearer scrn_ezjTCI05kThwRiaecXniaBVptqHSnvv0
 <Callout type="warn" title="Important">
 **Save this API key now!** You can use it directly with the SDK, but we recommend setting up the dashboard first and using it to generate separate keys for production use.
 
-See the [Dashboard Setup Guide](/docs/scrawn/dashboard-setup) for details.
+See the [Dashboard Setup Guide](/dashboard-setup) for details.
 </Callout>
 
 ### 5.1 Run the SQL Insert
@@ -193,13 +193,13 @@ Copy the SQL `INSERT` statement from the output and run it in your database prov
 Your backend is now configured! Deploy it to your preferred platform:
 
 <Cards>
-  <Card href="/docs/backend-deployment" title="Backend Deployment">
+  <Card href="/backend-deployment" title="Backend Deployment">
     Learn how to deploy your Scrawn backend to production
   </Card>
 </Cards>
 
 <Callout type="info" title="Local Testing">
-For easy local testing, refer [local running guide](/docs/scrawn/backend-deployment#running-locally).
+For easy local testing, refer [local running guide](/backend-deployment#running-locally).
 </Callout>
 
 ## 7. Install SDK in Your Project
@@ -251,7 +251,7 @@ await scrawn.sdkCallEventConsumer({
 ```
 
 <Callout type="warn" title="Configuration">
-**API Key:** Use the key you generated in [Step 5](#5-generate-initial-api-key) or get one from your [Dashboard](/docs/scrawn/dashboard-setup#creating-a-new-api-key).
+**API Key:** Use the key you generated in [Step 5](#5-generate-initial-api-key) or get one from your [Dashboard](/dashboard-setup#creating-a-new-api-key).
 
 **Base URL:** Use the URL you get after [deploying your Scrawn backend](#6-deploy-scrawn-backend).
 </Callout>
@@ -261,10 +261,10 @@ await scrawn.sdkCallEventConsumer({
 Dive deeper into Scrawn's capabilities:
 
 <Cards>
-  <Card href="/docs/sdk-guide#sdkcalleventconsumer" title="SDK Call Event Consumer">
+  <Card href="/scrawn-js/sdk-call-event" title="SDK Call Event Consumer">
     Learn how to track events and usage in detail
   </Card>
-  <Card href="/docs/sdk-guide#middlewarecall" title="Middleware Call">
+  <Card href="/scrawn-js/middleware-call" title="Middleware Call">
     Automatically track API requests with middleware integration
   </Card>
 </Cards>

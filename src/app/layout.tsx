@@ -1,7 +1,4 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
-import { baseOptions } from "@/lib/layout.shared";
-import { source } from "@/lib/source";
 import "@/app/globals.css";
 import { AISearchTrigger } from "@/components/search";
 import { Analytics } from "@vercel/analytics/next";
@@ -38,14 +35,7 @@ export default function Layout({ children }: LayoutProps<"/">) {
         <RootProvider>
           <Analytics />
           <AISearchTrigger />
-          <DocsLayout
-            {...baseOptions()}
-            sidebar={{ enabled: false }}
-            tree={source.pageTree}
-            githubUrl="https://github.com/ScrawnDotDev/Scrawn"
-          >
-            {children}
-          </DocsLayout>
+          {children}
         </RootProvider>
       </body>
     </html>

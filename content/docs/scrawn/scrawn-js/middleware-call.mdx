@@ -42,7 +42,7 @@ app.use(scrawn.middlewareEventConsumer({
 ### `extractor` (required)
 - **Type:** `(request) => EventPayload | Promise<EventPayload> | null | Promise<null>`
 - **Description:** Function to extract userId and debit info (debitAmount or debitTag) from the request. Return `null` to skip tracking.
-- **Returns:** [EventPayload](/docs/scrawn/api-reference#eventpayload) object with `userId` (string) and either (`debitAmount` (number) or `debitTag` (string)), or `null`
+- **Returns:** [EventPayload](/api-reference#eventpayload) object with `userId` (string) and either (`debitAmount` (number) or `debitTag` (string)), or `null`
 
 **Basic extractor:**
 ```typescript
@@ -315,10 +315,10 @@ app.post('/api/generate', async (req, res) => {
 ## Next Steps
 
 <Cards>
-  <Card href="/docs/scrawn-js/advanced-usage" title="Advanced Usage">
+  <Card href="/scrawn-js/advanced-usage" title="Advanced Usage">
     Some advanced usage patterns
   </Card>
-  <Card href="/docs/scrawn-js/framework-integration" title="Framework Integration">
+  <Card href="/scrawn-js/framework-integration" title="Framework Integration">
     Integration examples for popular frameworks
   </Card>
 </Cards>

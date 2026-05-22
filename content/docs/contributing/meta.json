@@ -3,7 +3,6 @@
   "root": true,
   "icon": "GitPullRequest",
   "pages": [
-    "index",
-    "gsoc-2026"
+    "index"
   ]
 }

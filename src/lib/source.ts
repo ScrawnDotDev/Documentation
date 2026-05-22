@@ -4,9 +4,17 @@ import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
-  baseUrl: '/docs',
+  baseUrl: '/',
   source: docs.toFumadocsSource(),
   plugins: [lucideIconsPlugin()],
+  slugs: ({ path }) => {
+    const parts = path.replace(/\.mdx?$/, '').split('/');
+    const filtered = parts.filter((p) => p !== 'index');
+    if (filtered[0] === 'scrawn') {
+      return filtered.slice(1);
+    }
+    return filtered;
+  },
 });
 
 export function getPageImage(page: InferPageType<typeof source>) {
@@ -14,7 +22,7 @@ export function getPageImage(page: InferPageType<typeof source>) {
 
   return {
     segments,
-    url: `/og/docs/${segments.join('/')}`,
+    url: `/og/${segments.join('/')}`,
   };
 }
 

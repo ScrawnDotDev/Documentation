@@ -35,7 +35,7 @@ export const HeroSection = () => {
                 size="lg"
                 className="group bg-zinc-950/80 backdrop-blur-sm border border-zinc-800/50 text-zinc-300 transition-all duration-300 ease-out hover:scale-105 hover:-translate-y-1 hover:bg-zinc-950 hover:text-zinc-100 hover:border-zinc-800 hover:shadow-[0_4px_25px_rgba(254,170,2,0.25)]"
               >
-                <Link href="/docs">
+                <Link href="/">
                   <span className="btn-label flex items-center gap-2 font-medium tracking-wide">
                     Get Started
                     <span className="text-zinc-500 transition-all duration-300 group-hover:text-fd-primary group-hover:translate-x-1">
