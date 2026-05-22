@@ -1,6 +1,8 @@
 import { getPageImage, source } from '@/lib/source';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export const revalidate = false;
 
@@ -11,6 +13,9 @@ export async function GET(
   const { slug } = await params;
   const page = source.getPage(slug.slice(0, -1));
   if (!page) notFound();
+
+  const logoData = fs.readFileSync(path.join(process.cwd(), 'public', 'Scrawn_Logo.png'));
+  const logoSrc = `data:image/png;base64,${logoData.toString('base64')}`;
 
   return new ImageResponse(
     (
@@ -51,14 +56,24 @@ export async function GET(
         >
           <div
             style={{
-              color: '#feaa02',
-              fontSize: 32,
-              fontWeight: 600,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
             }}
           >
-            Scrawn Docs
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoSrc} alt="Scrawn Logo" width={48} height={48} />
+            <div
+              style={{
+                color: '#feaa02',
+                fontSize: 32,
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Scrawn Docs
+            </div>
           </div>
 
           <div
