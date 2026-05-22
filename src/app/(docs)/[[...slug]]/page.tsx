@@ -10,6 +10,9 @@ import { getMDXComponents } from '@/mdx-components';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
 
+export const dynamic = 'force-static';
+export const revalidate = false;
+
 export default async function Page(props: PageProps<'/[[...slug]]'>) {
   const params = await props.params;
   const slug = params.slug ?? [];
@@ -56,6 +59,9 @@ export async function generateMetadata(
   return {
     title: `${page.data.title} | Scrawn`,
     description: page.data.description,
+    alternates: {
+      canonical: `https://docs.scrawn.dev${page.url}`,
+    },
     openGraph: {
       images: getPageImage(page).url,
     },

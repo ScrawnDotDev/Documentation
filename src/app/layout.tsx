@@ -5,9 +5,26 @@ import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Scrawn | The End-to-end billing infrastructure for builders",
+  metadataBase: new URL("https://docs.scrawn.dev"),
+  title: {
+    template: "%s | Scrawn",
+    default: "Scrawn | The End-to-end billing infrastructure for builders",
+  },
   description:
     "Track usage, manage API keys, process payments. Stop wrestling with payment gateway webhooks and start shipping features.",
+  openGraph: {
+    title: "Scrawn | The End-to-end billing infrastructure for builders",
+    description: "Track usage, manage API keys, process payments. Stop wrestling with payment gateway webhooks and start shipping features.",
+    url: "https://docs.scrawn.dev",
+    siteName: "Scrawn Docs",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Scrawn | The End-to-end billing infrastructure for builders",
+    description: "Track usage, manage API keys, process payments. Stop wrestling with payment gateway webhooks and start shipping features.",
+  },
 };
 
 export default function Layout({ children }: LayoutProps<"/">) {
