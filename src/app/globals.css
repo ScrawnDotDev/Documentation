@@ -11,3 +11,90 @@
     --color-fd-primary: #feaa02; /* Warm honey-orange for dark mode */
     --color-fd-primary-foreground: oklch(0.2 0 0);
 }
+
+/* ─── Custom Code Block Styles ─── */
+
+/* Scrollbar styling within code blocks */
+.fd-scroll-container::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+.fd-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.fd-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 99px;
+}
+.fd-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Syntax highlighting inside the dark code block shell */
+.shiki {
+    background: transparent !important;
+}
+.shiki code {
+    color: inherit !important;
+}
+.shiki .line {
+    display: inline-block;
+    width: 100%;
+    padding: 0 0.5rem;
+}
+
+/* Line numbers */
+[data-line-numbers] .line::before {
+    counter-increment: line;
+    content: counter(line);
+    display: inline-block;
+    width: 2.5ch;
+    margin-right: 1.25ch;
+    text-align: right;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.75em;
+    user-select: none;
+}
+
+/* Highlighted lines via shiki transformer */
+.shiki .line.highlighted {
+    background: rgba(254, 170, 2, 0.08);
+    border-left: 2px solid var(--color-fd-primary);
+    padding-left: calc(0.5rem - 2px);
+}
+.shiki .line.diff.add {
+    background: rgba(34, 197, 94, 0.08);
+    border-left: 2px solid #22c55e;
+    padding-left: calc(0.5rem - 2px);
+}
+.shiki .line.diff.add::before {
+    content: "+";
+    color: #22c55e;
+}
+.shiki .line.diff.remove {
+    background: rgba(239, 68, 68, 0.08);
+    border-left: 2px solid #ef4444;
+    padding-left: calc(0.5rem - 2px);
+}
+.shiki .line.diff.remove::before {
+    content: "-";
+    color: #ef4444;
+}
+.shiki .line.focused {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Marked / highlighted words */
+.shiki .highlighted-word {
+    background: rgba(254, 170, 2, 0.15);
+    border-radius: 3px;
+    padding: 0 3px;
+}
+
+/* Error level annotations */
+.shiki .error {
+    text-decoration: underline wavy #ef4444;
+}
+.shiki .warning {
+    text-decoration: underline wavy #facc15;
+}

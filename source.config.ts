@@ -4,9 +4,14 @@ import {
   frontmatterSchema,
   metaSchema,
 } from 'fumadocs-mdx/config';
+import {
+  transformerNotationFocus,
+  transformerNotationDiff,
+  transformerNotationHighlight,
+  transformerNotationWordHighlight,
+  transformerNotationErrorLevel,
+} from '@shikijs/transformers';
 
-// You can customise Zod schemas for frontmatter and `meta.json` here
-// see https://fumadocs.dev/docs/mdx/collections
 export const docs = defineDocs({
   dir: 'content/docs',
   docs: {
@@ -27,6 +32,22 @@ export default defineConfig({
         light: 'catppuccin-latte',
         dark: 'catppuccin-mocha',
       },
+      transformers: [
+        transformerNotationFocus(),
+        transformerNotationDiff(),
+        transformerNotationHighlight(),
+        transformerNotationWordHighlight(),
+        transformerNotationErrorLevel(),
+        {
+          name: 'preserve-language-class',
+          pre(node) {
+            const lang = this.options.lang;
+            if (lang) {
+              this.addClassToHast(node, `language-${lang}`);
+            }
+          },
+        },
+      ],
     },
   },
 });
