@@ -1,0 +1,65 @@
+---
+title: Overview
+description: SDK reference for Scrawn — functions, pricing DSL, and production patterns
+---
+
+Everything you need to integrate Scrawn into your application.
+
+## Configuration
+
+`scrawn()` is the factory that creates your billing instance:
+
+```typescript
+import { scrawn, tag } from "@scrawn/core";
+
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+  tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
+  expressions: ["MY_EXPR"] as const,
+  retryCount: 3,
+});
+```
+
+The factory accepts a single config object:
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `apiKey` | `string` | — | Your Scrawn API key (starts with `scrn_`) |
+| `baseURL` | `string` | — | Base URL of your Scrawn backend (e.g. `http://localhost:8069`) |
+| `secure` | `boolean` | `true` | Whether to use TLS for gRPC. Set to `false` for local dev |
+| `tags` | `readonly string[]` | — | Known tag names for compile-time type checking on `biller.tag()` |
+| `expressions` | `readonly string[]` | — | Known expression names for compile-time type checking on `biller.expr()` |
+| `retryCount` | `number` | `2` | Auto-retry attempts on transient network errors. Set to `0` to disable |
+
+## Functions
+
+The core methods you call in your code to track usage, bill AI tokens, and collect payments.
+
+<Cards>
+  <Card href="/sdk-reference/functions/usage-tracking" title="Usage Tracking">
+    Track billable events — manually with `basicUsageEventConsumer()` or automatically with `middlewareEventConsumer()`.
+  </Card>
+  <Card href="/sdk-reference/functions/ai-token-billing" title="AI Token Billing">
+    Meter AI token usage per-call with `aiTokenStreamConsumer()`, `biller.ai()`, or `trackAI()`.
+  </Card>
+  <Card href="/sdk-reference/functions/collect-payment" title="Collect Payments">
+    Generate a Dodo checkout link when a user's balance crosses your threshold.
+  </Card>
+</Cards>
+
+## Reference & Guides
+
+Pricing expressions, production patterns, and framework integration.
+
+<Cards>
+  <Card href="/sdk-reference/reference-and-guides/pricing-dsl" title="Pricing DSL">
+    Type-safe expressions for complex pricing — `mul()`, `add()`, `tag()`, `inputTokens()`, and more.
+  </Card>
+  <Card href="/sdk-reference/reference-and-guides/_production" title="Production Patterns">
+    Error handling, retries, batch processing, caching, and environment configuration.
+  </Card>
+  <Card href="/sdk-reference/reference-and-guides/framework-recipes" title="Framework Recipes">
+    Quick integration patterns for Express, Next.js, Fastify, NestJS, tRPC, Hono, and Nuxt.
+  </Card>
+</Cards>

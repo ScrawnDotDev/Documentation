@@ -10,7 +10,7 @@ The Scrawn Dashboard is a Next.js application that gives you a visual interface 
 ## Prerequisites
 
 Before setting up the dashboard, make sure you have:
-- [Scrawn backend deployed](/backend-deployment) and running
+- [Scrawn backend running](/local-setup) locally
 - Database URL (same PostgreSQL database as your backend)
 - Initial API key generated from [Quick Start](/quick-start#5-generate-initial-api-key)
 
@@ -172,10 +172,10 @@ Click the copy button next to the key to copy it to your clipboard.
 You can now use this API key in your application:
 
 ```typescript
-import { Scrawn } from '@scrawn/core';
+import { scrawn } from "@scrawn/core";
 
-const scrawn = new Scrawn({
-  apiKey: 'scrn_YOUR_NEW_KEY_HERE', // [!code highlight]
+const biller = scrawn({
+  apiKey: "scrn_YOUR_NEW_KEY_HERE" as `scrn_${string}`, // [!code highlight]
   baseURL: process.env.SCRAWN_BASE_URL,
 });
 ```
@@ -194,10 +194,10 @@ The dashboard provides several views to monitor your billing infrastructure:
 Now that your dashboard is set up, start using Scrawn in your application:
 
 <Cards>
-  <Card href="/scrawn-js" title="SDK Integration Guide">
+  <Card href="/sdk-reference" title="SDK Reference">
     Learn how to integrate Scrawn SDK into your application
   </Card>
-  <Card href="/api-reference" title="API Reference">
+  <Card href="/scrawn/_api-reference" title="API Reference">
     Explore the complete API reference and advanced features
   </Card>
 </Cards>

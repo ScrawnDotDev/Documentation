@@ -1,206 +1,100 @@
 ---
 title: Quick Start
-description: Get Scrawn up and running in minutes
+description: Install the SDK and start billing in under a minute.
 ---
 
-Get Scrawn backend and SDK running in your project. This guide will walk you through setting up the backend, configuring your database, and integrating the SDK.
+Install the SDK and start tracking billable events — no backend setup or config required.
 
-## 1. Clone the Repository
-
-<Tabs items={['HTTPS', 'Github CLI']}>
-  <Tab value="HTTPS">
-    ```bash
-    git clone https://github.com/ScrawnDotDev/Scrawn.git
-    cd Scrawn
-    ```
-  </Tab>
-  <Tab value="Github CLI">
-    ```bash
-    gh repo clone ScrawnDotDev/Scrawn
-    cd Scrawn
-    ```
-  </Tab>
-</Tabs>
-
-### 1.1 Install packages
+## 1. Install
 
 <Tabs items={['bun', 'npm', 'yarn']}>
   <Tab value="bun">
     ```bash
-    bun install
+    bun add @scrawn/core
     ```
   </Tab>
   <Tab value="npm">
     ```bash
-    npm install
+    npm install @scrawn/core
     ```
   </Tab>
   <Tab value="yarn">
     ```bash
-    yarn install
+    yarn add @scrawn/core
     ```
   </Tab>
 </Tabs>
 
-## 2. Configure User ID Type
+## 2. Initialize
 
-Open `src/config/identifiers.ts` and set your user ID type based on your database schema:
+```typescript
+import { scrawn, tag } from "@scrawn/core";
 
-```ts title="src/config/identifiers.ts"
-// Choose the ID type that matches your database
-export const USER_ID_CONFIG = ID_CONFIGS.uuid;  // [!code --]
-export const USER_ID_CONFIG = ID_CONFIGS.uuid;  // For UUID user IDs // [!code ++]
-// export const USER_ID_CONFIG = ID_CONFIGS.bigint;  // For BigInt user IDs // [!code ++]
-// export const USER_ID_CONFIG = ID_CONFIGS.int;  // For Integer user IDs // [!code ++]
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+});
 ```
 
-## 3. Setup Environment Variables
+## 3. Track Basic Usage
 
-Copy the example environment file to create your local configuration:
+Call `basicUsageEventConsumer` whenever a billable action happens:
 
-<Tabs items={['macOS/Linux', 'Windows (CMD)', 'Windows (PowerShell)']}>
-  <Tab value="macOS/Linux">
-    ```bash
-    cp .env.example .env.local
-    ```
-  </Tab>
-  <Tab value="Windows (CMD)">
-    ```cmd
-    copy .env.example .env.local
-    ```
-  </Tab>
-  <Tab value="Windows (PowerShell)">
-    ```powershell
-    Copy-Item .env.example .env.local
-    ```
-  </Tab>
-</Tabs>
+```typescript
+// Direct amount — 500 cents = $5.00
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: 500,
+});
 
-Now edit `.env.local` with your configuration:
-
-```bash title=".env.local"
-HMAC_SECRET="YOUR_VERY_SECRET_CODE_GOES_HERE" 
-DATABASE_URL="YOUR_NOT_SO_SECRET_DATABASE_URL_GOES_HERE"
-LEMON_SQUEEZY_API_KEY="" 
-LEMON_SQUEEZY_STORE_ID=""
-LEMON_SQUEEZY_VARIANT_ID="" 
+// Or reference a price tag managed on the backend
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: tag("PREMIUM_CALL"),
+});
 ```
 
-### 3.1 Generate HMAC Secret
+## 4. Track AI Token Usage
 
- Generate a secure HMAC secret:
+Stream per-token usage with an async generator:
 
-```bash
-openssl rand -base64 64
+```typescript
+const response = await biller.aiTokenStreamConsumer({
+  userId: "user-123",
+  model: "gpt-4",
+  inputTokens: 100,
+  outputTokens: 50,
+  inputDebit: 3,   // 3¢ per input token
+  outputDebit: 6,  // 6¢ per output token
+});
+// → { eventsProcessed: 1 }
 ```
 
-Copy the output and paste it as your `HMAC_SECRET` value.
+Or wrap the Vercel AI SDK with `biller.ai()` to auto-bill every LLM call:
 
-### 3.2 Database URL
+```typescript
+import * as ai from "ai";
 
-Set up a PostgreSQL database and paste the connection URL. You can use:
-- [Supabase](https://supabase.com/) (free tier available)
-- [Neon](https://neon.tech/) (serverless Postgres)
-- [Railway](https://railway.app/) (easy deployment)
+const aii = biller.ai(ai, {
+  inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
+  outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
+});
 
-Example: `postgresql://user:password@host:5432/database`
-
-### 3.3 Lemon Squeezy Configuration
-
-1. Sign up at [Lemon Squeezy](https://lemonsqueezy.com/)
-2. Follow their [Getting Started Guide](https://docs.lemonsqueezy.com/guides/developer-guide/getting-started)
-3. Get your API key, Store ID, and Variant ID from the dashboard
-
-## 4. Run Database Migrations
-
-```bash
-drizzle-kit push
+const result = await aii.streamText({
+  userId: "user-123",
+  model: openai("gpt-4o-mini"),
+  prompt: "Hello",
+});
 ```
 
-## 5. Generate Initial API Key
+## 5. Collect Payment
 
-<Tabs items={['bun', 'npm', 'yarn']}>
-  <Tab value="bun">
-    ```bash
-    bun run init_key
-    ```
-  </Tab>
-  <Tab value="npm">
-    ```bash
-    npm run init_key
-    ```
-  </Tab>
-  <Tab value="yarn">
-    ```bash
-    yarn run init_key
-    ```
-  </Tab>
-</Tabs>
+When a user's balance crosses your threshold, collect with one call:
 
-You'll see output like this:
-
-```bash
-=== Initial API Key Generated ===
-
-API Key Details:
-  ID:         0f3f5bb5-6552-4124-9419-eb4d9e965c4f
-  # [!code highlight]
-  Key:        scrn_ezjTCI05kThwRiaecXniaBVptqHSnvv0 
-  Name:       Dashboard Key
-  Created At: 2025-11-15T09:07:58.380Z
-  Expires At: 2026-11-15T09:07:58.380Z
-
-
-=== SQL INSERT Statement ===
-# [!code highlight:10]
-INSERT INTO api_keys (id, name, key, created_at, expires_at, revoked, revoked_at) 
-VALUES ( 
-  '0f3f5bb5-6552-4124-9419-eb4d9e965c4f', 
-  'Dashboard Key', 
-  '32dee4c664e35901e4d1a89b34ddace0f8fbcdde058c9550b28b918835a4b3c0', 
-  '2025-11-15T09:07:58.380Z', 
-  '2026-11-15T09:07:58.380Z', 
-  false, 
-  NULL 
-); 
-
-
-=== Usage ===
-Authorization: Bearer scrn_ezjTCI05kThwRiaecXniaBVptqHSnvv0
-
-
-=== IMPORTANT ===
-1. The key is stored as an HMAC-SHA256 hash in the database
-2. Run the SQL INSERT statement above in your PostgreSQL database
-3. Use the PLAINTEXT API key (above) in the Authorization header
-4. Keep this API key secure - it will be used to generate new API keys
-5. The plaintext key is shown only once - save it now!
-=================
+```typescript
+const checkoutLink = await biller.collectPayment("user-123");
+// → "https://checkout.dodopayments.com/..."
 ```
-
-<Callout type="warn" title="Important">
-**Save this API key now!** You can use it directly with the SDK, but we recommend setting up the dashboard first and using it to generate separate keys for production use.
-
-See the [Dashboard Setup Guide](/dashboard-setup) for details.
-</Callout>
-
-### 5.1 Run the SQL Insert
-
-Copy the SQL `INSERT` statement from the output and run it in your database provider's SQL editor (Supabase SQL Editor, Neon Console, etc.).
-
-## 6. Deploy Scrawn Backend
-
-Your backend is now configured! Deploy it to your preferred platform:
-
-<Cards>
-  <Card href="/backend-deployment" title="Backend Deployment">
-    Learn how to deploy your Scrawn backend to production
-  </Card>
-</Cards>
-
-<Callout type="info" title="Local Testing">
-For easy local testing, refer [local running guide](/backend-deployment#running-locally).
-</Callout>
 
 ## 7. Install SDK in Your Project
 
@@ -224,47 +118,15 @@ Now integrate Scrawn into your application:
   </Tab>
 </Tabs>
 
-## Enjoy! 🎉
-
-Start tracking usage and billing your customers:
-
-```typescript
-import { Scrawn } from '@scrawn/core';
-
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY, // [!code highlight]
-  baseURL: process.env.SCRAWN_BASE_URL, // [!code highlight]
-});
-
-// Track usage with direct amount
-await scrawn.sdkCallEventConsumer({ 
-  userId: '0a1e38a5-e2f3-450f-9796-59ad406d93dc', 
-  debitAmount: 5000,
-});
-
-// Or track usage with a backend price tag
-await scrawn.sdkCallEventConsumer({ 
-  userId: '0a1e38a5-e2f3-450f-9796-59ad406d93dc', 
-  debitTag: 'STANDARD_API_CALL',
-});
-
-```
-
-<Callout type="warn" title="Configuration">
-**API Key:** Use the key you generated in [Step 5](#5-generate-initial-api-key) or get one from your [Dashboard](/dashboard-setup#creating-a-new-api-key).
-
-**Base URL:** Use the URL you get after [deploying your Scrawn backend](#6-deploy-scrawn-backend).
-</Callout>
-
-### Next Steps
-
-Dive deeper into Scrawn's capabilities:
 
 <Cards>
-  <Card href="/scrawn-js/sdk-call-event" title="SDK Call Event Consumer">
-    Learn how to track events and usage in detail
+  <Card href="/sdk-reference/functions/usage-tracking" title="Usage Tracking">
+    Track billable events manually or with middleware
   </Card>
-  <Card href="/scrawn-js/middleware-call" title="Middleware Call">
-    Automatically track API requests with middleware integration
+  <Card href="/sdk-reference/functions/ai-token-billing" title="AI Token Billing">
+    Meter AI token usage per-call
+  </Card>
+  <Card href="/sdk-reference/reference-and-guides/pricing-dsl" title="Pricing DSL">
+    Type-safe expressions with mul(), add(), and tag()
   </Card>
 </Cards>

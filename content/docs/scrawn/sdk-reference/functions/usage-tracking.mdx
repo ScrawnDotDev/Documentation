@@ -1,0 +1,166 @@
+---
+title: Usage Tracking
+description: Track billable events with basicUsageEventConsumer and middlewareEventConsumer
+---
+
+Events are the core of Scrawn — every API call, AI generation, or billable action produces an event. Track them manually where you need control, or automatically with middleware.
+
+## Manual Tracking
+
+Call `basicUsageEventConsumer` whenever a billable action happens:
+
+```typescript
+import { scrawn, tag } from "@scrawn/core";
+
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+});
+
+// Debit a fixed amount in cents
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: 500,
+});
+
+// Or use a price tag managed on the backend
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: tag("PREMIUM_CALL"),
+});
+
+// Or use a pricing expression
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: mul(tag("PER_CALL"), 3),
+});
+```
+
+### Parameters
+
+| Param | Type | Description |
+|---|---|---|
+| `userId` | `string` | User to bill (required) |
+| `debit` | `number \| PriceExpr` | Cents or pricing expression |
+| `metadata` | `object` | (optional) Arbitrary metadata |
+
+The `debit` field accepts a number (cents), a `tag()` reference, a pricing expression like `mul(tag(...), n)`, or a `biller.expr()` reference.
+
+### Error Handling
+Use the `onError` callback for non-blocking error handling with manual retries if you please:
+
+```typescript
+await biller.basicUsageEventConsumer(
+  { userId: "user-123", debit: 500 },
+  {
+    onError: (error, context) => {
+      console.error("Billing failed:", error.message);
+      if (error.retryable && context) {
+        await context.retry();
+      }
+    },
+  }
+);
+```
+
+## Automatic Tracking (Middleware)
+
+`middlewareEventConsumer` drops into any Express-compatible framework and tracks events automatically based on your extractor function.
+
+```typescript
+import { scrawn } from "@scrawn/core";
+
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+});
+
+app.use(biller.middlewareEventConsumer({
+  extractor: (req) => ({
+    userId: req.headers["x-user-id"] as string,
+    debit: 1,
+  }),
+}));
+```
+
+### Configuration
+
+#### `extractor` (required)
+
+Extracts `userId` and `debit` from each request. Return `null` to skip tracking.
+
+```typescript
+// Simple amount
+extractor: (req) => ({ userId: req.user.id, debit: 10 })
+
+// Tag-based pricing
+extractor: (req) => ({ userId: req.user.id, debit: tag("STANDARD_API_CALL") })
+
+// Async extraction
+extractor: async (req) => {
+  const user = await getUser(req);
+  return { userId: user.id, debit: calculateCost(req) };
+}
+
+// Conditional skip
+extractor: (req) => {
+  if (!req.user) return null;
+  return { userId: req.user.id, debit: 1 };
+}
+```
+
+#### `whitelist` (optional)
+
+Only track specific endpoint patterns. Supports wildcards — `*` matches one segment, `**` matches multiple.
+
+```typescript
+whitelist: ["/api/v1/*", "/api/premium/**"]
+```
+
+#### `blacklist` (optional)
+
+Exclude specific endpoints from tracking.
+
+```typescript
+blacklist: ["/health", "/api/collect-payment", "/internal/**"]
+```
+
+### Best Practices
+
+**Place after authentication:**
+
+```typescript
+app.use(authMiddleware);
+app.use(biller.middlewareEventConsumer({ /* ... */ }));
+```
+
+**Exclude payment endpoints from tracking:**
+
+```typescript
+blacklist: ["/api/collect-payment"]
+```
+
+**Middleware runs tracking in the background — your handler is not blocked:**
+
+```typescript
+app.post("/api/generate", async (req, res) => {
+  const result = await generateContent(req.body);
+  res.json(result);
+  // Tracking already happened in parallel
+});
+```
+
+### Framework Compatibility
+
+The middleware uses standard `(req, res, next)` signatures. For Fastify, Next.js, or Hono, call `basicUsageEventConsumer` directly in route handlers or [check framework recipes](/sdk-reference/reference-and-guides/framework-recipes) for adapters.
+
+## Next Steps
+
+<Cards>
+  <Card href="/sdk-reference/functions/ai-token-billing" title="AI Token Billing">
+    Meter AI token usage per-call
+  </Card>
+  <Card href="/sdk-reference/functions/collect-payment" title="Collect Payments">
+    Generate a checkout link when it's time to get paid
+  </Card>
+</Cards>

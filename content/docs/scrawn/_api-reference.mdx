@@ -5,83 +5,95 @@ description: Complete reference for Scrawn SDK and gRPC API
 
 ## SDK API
 
-<Callout type="info">
-{/* **New** Tags for pricing - Use `debitTag` when you want the backend to look up a price (instead of passing a raw amount). */}
-**New :** Tags for pricing. Use `debitTag` for backend price lookup instead of passing a raw amount.
-
-</Callout>
-
-### Constructor
+### scrawn()
 
 ```typescript
-new Scrawn(config: { apiKey: string; baseURL: string })
+import { scrawn } from "@scrawn/core";
+
+const biller = scrawn(config: ScrawnInitConfig): Scrawn
 ```
 
-Creates a new Scrawn SDK instance.
+Creates a billing instance.
 
 **Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `apiKey` | `string` as `` `scrn_${string}` `` | Yes | Your Scrawn API key (must start with `scrn_`) |
-| `baseURL` | `string` | Yes | Backend server URL |
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `apiKey` | `string` | — | Your Scrawn API key (starts with `scrn_`) |
+| `baseURL` | `string` | — | Backend server URL |
+| `secure` | `boolean` | `true` | Whether to use TLS for gRPC. Set to `false` for local dev |
+| `tags` | `readonly string[]` | — | Known tag names for compile-time type checking on `biller.tag()` |
+| `expressions` | `readonly string[]` | — | Known expression names for compile-time type checking on `biller.expr()` |
+| `retryCount` | `number` | `2` | Auto-retry attempts on transient network errors |
 
 **Example:**
 
 ```typescript
-const scrawn = new Scrawn({
+const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+  tags: ["PREMIUM_CALL", "EXTRA_FEE"] as const,
 });
 ```
 
-### sdkCallEventConsumer
+### basicUsageEventConsumer
 
 ```typescript
-scrawn.sdkCallEventConsumer(payload: EventPayload): Promise<void>
+biller.basicUsageEventConsumer(payload: EventPayload, options?: { onError? }): Promise<void>
 ```
 
-Track billable usage events.
+Track a billable usage event.
 
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `userId` | `string` | Yes | Unique user identifier |
-| `debitAmount` | `number` | No | Amount to debit from user's balance |
-| `debitTag` | `string` | No | Price tag configured in your backend |
+| `debit` | `number \| PriceExpr` | Yes | Cents or pricing expression (`tag()`, `mul()`, etc.) |
+| `metadata` | `object` | No | Arbitrary metadata |
 
 **Returns:** `Promise<void>`
 
 **Example:**
 
 ```typescript
-await scrawn.sdkCallEventConsumer({
-  userId: 'user-123',
-  debitAmount: 100,
+// Direct amount — 500 cents = $5.00
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: 500,
 });
 
-await scrawn.sdkCallEventConsumer({
-  userId: 'user-123',
-  debitTag: 'STANDARD_API_CALL',
+// Price tag
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: tag("PREMIUM_CALL"),
+});
+
+// Pricing expression
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: mul(tag("PER_CALL"), 3),
 });
 ```
 
-**Validation:**
-- `userId` must be a non-empty string
-- Either `debitAmount` or `debitTag` must be provided
-- `debitAmount` must be a positive number
-- `debitTag` must be a non-empty string
+**Error callback:**
 
-**Throws:**
-- `Error` with detailed validation message on invalid payload
-- `Error` on gRPC call failure
+```typescript
+await biller.basicUsageEventConsumer(
+  { userId: "user-123", debit: 500 },
+  {
+    onError: (error, context) => {
+      if (error.retryable && context) await context.retry();
+    },
+  }
+);
+```
 
 ### middlewareEventConsumer
 
 ```typescript
-scrawn.middlewareEventConsumer(config: MiddlewareEventConfig): 
-  (req: MiddlewareRequest, res: MiddlewareResponse, next: MiddlewareNext) => Promise<void>
+biller.middlewareEventConsumer(config: MiddlewareEventConfig): 
+  (req, res, next) => Promise<void>
 ```
 
 Creates Express-compatible middleware that automatically tracks usage for API requests.
@@ -90,76 +102,97 @@ Creates Express-compatible middleware that automatically tracks usage for API re
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `extractor` | `PayloadExtractor` | Yes | Function to extract `userId` and `debit info` from request |
-| `whitelist` | `string[]` | No | Array of endpoint patterns to track (takes precedence over blacklist) |
-| `blacklist` | `string[]` | No | Array of endpoint patterns to exclude from tracking |
-
-**Types:**
-
-```typescript
-type PayloadExtractor = (req: MiddlewareRequest) => 
-  EventPayload | Promise<EventPayload> | null | Promise<null>;
-
-interface MiddlewareEventConfig {
-  extractor: PayloadExtractor;
-  whitelist?: string[];
-  blacklist?: string[];
-}
-```
-
-**Returns:** Express-compatible middleware function `(req, res, next) => Promise<void>`
+| `extractor` | `(req) => { userId, debit } \| null` | Yes | Extracts billing info from each request |
+| `whitelist` | `string[]` | No | Endpoint patterns to track (`*` single, `**` multi segment) |
+| `blacklist` | `string[]` | No | Endpoint patterns to exclude |
 
 **Example:**
 
 ```typescript
-app.use(scrawn.middlewareEventConsumer({
-  extractor: (req): EventPayload => ({
-    userId: req.headers['x-user-id'] as string,
-    debitAmount: req.body?.cost || 1,
+app.use(biller.middlewareEventConsumer({
+  extractor: (req) => ({
+    userId: req.headers["x-user-id"] as string,
+    debit: req.body?.cost || 1,
   }),
-  blacklist: ['/health', '/api/collect-payment'],
+  blacklist: ["/health", "/api/collect-payment"],
 }));
 ```
 
-**Wildcard Patterns:**
-- `*` matches single path segment (e.g., `/api/*` matches `/api/users` but not `/api/users/123`)
-- `**` matches multiple segments (e.g., `/api/**` matches any path starting with `/api/`)
+### aiTokenStreamConsumer
 
-**Error Handling:**
-- Errors are automatically caught and logged without blocking requests
-- Failed tracking attempts don't affect the HTTP response
+```typescript
+biller.aiTokenStreamConsumer(
+  stream: AsyncIterable<AITokenUsagePayload>
+): Promise<StreamEventResponse | undefined>
+```
+
+Stream AI token usage events for billing. Supports a fork mode for simultaneous user streaming.
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `stream` | `AsyncIterable<AITokenUsagePayload>` | Token usage events to bill |
+| `config.return` | `boolean` | If `true`, returns a forked stream alongside the response |
+
+**Example:**
+
+```typescript
+async function* generateUsage() {
+  yield {
+    userId: "user-123",
+    model: "gpt-4",
+    inputTokens: 100,
+    outputTokens: 50,
+    inputDebit: 3,
+    outputDebit: 6,
+  };
+}
+
+const response = await biller.aiTokenStreamConsumer(generateUsage());
+```
+
+### biller.ai()
+
+Wraps the Vercel AI SDK so every LLM call auto-bills:
+
+```typescript
+import * as ai from "ai";
+
+const aii = biller.ai(ai, {
+  inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
+  outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
+});
+
+const result = await aii.streamText({
+  userId: "user-123",
+  model: openai("gpt-4o-mini"),
+  prompt: "Hello",
+});
+```
+
+### biller.trackAI()
+
+Manually track AI token usage from an `onFinish` callback:
+
+```typescript
+await biller.trackAI(userId, model, usage, overrides, defaults);
+```
 
 ### collectPayment
 
 ```typescript
-scrawn.collectPayment(userId: string): Promise<string>
+biller.collectPayment(userId: string): Promise<string>
 ```
 
-Generate payment checkout link for a user to pay their outstanding amount.
-
-**Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `userId` | `string` | Yes | Unique identifier of the user to collect payment from |
-
-**Returns:** `Promise<string>`  -  Checkout URL where the user can complete payment
+Generate a checkout link for a user to pay their outstanding balance.
 
 **Example:**
 
 ```typescript
-const checkoutLink = await scrawn.collectPayment('user-123');
-
-// Redirect user to payment page
+const checkoutLink = await biller.collectPayment("user-123");
 res.redirect(checkoutLink);
 ```
-
-**Validation:**
-- `userId` must be a non-empty string
-
-**Throws:**
-- `Error` if `userId` is invalid
-- `Error` on gRPC call failure
 
 ## gRPC API
 
@@ -355,13 +388,13 @@ The SDK throws standard JavaScript `Error` objects with descriptive messages.
 
 ```typescript
 try {
-  await scrawn.sdkCallEventConsumer({
-    userId: '',  // Invalid: empty string
-    debitAmount: -5,  // Invalid: negative number
+  await biller.basicUsageEventConsumer({
+    userId: "",  // Invalid: empty string
+    debit: -5,   // Invalid: negative number
   });
 } catch (error) {
   console.error(error.message);
-  // "Payload validation failed: userId: must be a non-empty string, debitAmount: must be a positive number"
+  // "Payload validation failed: userId: must be a non-empty string, debit: must be a positive number"
 }
 ```
 
@@ -369,16 +402,16 @@ try {
 
 ```typescript
 try {
-  await scrawn.sdkCallEventConsumer({
-    userId: 'user-123',
-    debitAmount: 100,
+  await biller.basicUsageEventConsumer({
+    userId: "user-123",
+    debit: 100,
   });
 } catch (error) {
-  console.error('Failed to register event:', error.message);
+  console.error("Failed to register event:", error.message);
 }
 ```
 
-### Backend Error Typesuctured errors using gRPC Connect error codes.
+### Backend Error Types
 
 #### AuthError
 
@@ -457,20 +490,40 @@ All backend errors follow the gRPC Connect error format:
 ### EventPayload
 
 ```typescript
-interface EventPayload {
+type Debit<TTag extends string = string> = number | PriceExpr<TTag>;
+
+interface EventPayload<TTag extends string = string> {
   userId: string;
-  debitAmount?: number;
-  debitTag?: string;
+  debit: Debit<TTag>;
+  metadata?: Record<string, unknown>;
 }
 ```
 
-Validated using Zod schema:
-- `userId`: Must be a non-empty string
-- Exactly one of `debitAmount` or `debitTag` must be provided
-- `debitAmount`: Must be a positive number
-- `debitTag`: Must be a non-empty string
+The `debit` field accepts:
+- A number (cents) — e.g. `500` for $5.00
+- A `tag()` reference — e.g. `tag("PREMIUM_CALL")`
+- A pricing expression — e.g. `mul(tag("PER_CALL"), 3)`
 
-### MiddlewareRequest
+### AITokenUsagePayload
+
+```typescript
+interface AITokenUsagePayload<TTag extends string = string> {
+  userId: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  inputDebit: Debit<TTag>;
+  outputDebit: Debit<TTag>;
+  provider?: string;
+  inputCacheTokens?: number;
+  inputCacheDebit?: Debit<TTag>;
+  outputCacheTokens?: number;
+  outputCacheDebit?: Debit<TTag>;
+  metadata?: Record<string, unknown>;
+}
+```
+
+### Middleware Types
 
 ```typescript
 interface MiddlewareRequest {
@@ -483,50 +536,25 @@ interface MiddlewareRequest {
   params?: Record<string, any>;
   [key: string]: any;
 }
-```
 
-Generic request object compatible with Express, Fastify, and other Node.js frameworks.
-
-### MiddlewareResponse
-
-```typescript
 interface MiddlewareResponse {
   status?: (code: number) => MiddlewareResponse;
   json?: (data: any) => void;
   send?: (data: any) => void;
   [key: string]: any;
 }
-```
 
-Generic response object compatible with Express, Fastify, and other Node.js frameworks.
-
-### MiddlewareNext
-
-```typescript
 type MiddlewareNext = (error?: any) => void;
-```
 
-### PayloadExtractor
+type PayloadExtractor = (req: MiddlewareRequest) =>
+  EventPayload | Promise<EventPayload> | null | Promise<null>;
 
-```typescript
-type PayloadExtractor = (
-  req: MiddlewareRequest
-) => EventPayload | Promise<EventPayload> | null | Promise<null>;
-```
-
-Function that extracts `userId` and either `debitAmount` or `debitTag` from a request. Return `null` to skip tracking.
-
-### MiddlewareEventConfig
-
-```typescript
 interface MiddlewareEventConfig {
   extractor: PayloadExtractor;
   whitelist?: string[];
   blacklist?: string[];
 }
 ```
-
-Configuration for `middlewareEventConsumer`.
 
 ## Utilities
 
@@ -570,12 +598,12 @@ All API requests require authentication via Bearer token in the `Authorization` 
 
 **Using the SDK:**
 
-The SDK handles authentication automatically using the `apiKey` provided in the constructor:
+The SDK handles authentication automatically using the `apiKey` provided to the `scrawn()` factory:
 
 ```typescript
-const scrawn = new Scrawn({
+const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: 'http://localhost:8069',
+  baseURL: "http://localhost:8069",
 });
 ```
 
@@ -606,7 +634,7 @@ Authorization: Bearer scrn_your_api_key
   <Card href="/quick-start" title="Quick Start">
     Get started with scrawn in minutes
   </Card>
-  <Card href="/scrawn-js" title="Integrating SDK">
+  <Card href="/sdk-reference" title="SDK Reference">
     SDK integration in your code
   </Card>
 </Cards>

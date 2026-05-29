@@ -1,0 +1,98 @@
+---
+title: Vercel AI SDK
+description: First-class Vercel AI SDK integration — auto-bill every LLM call
+---
+
+# Vercel AI SDK <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">First class</span>
+
+Scrawn wraps the Vercel AI SDK so every `streamText`, `generateText`, `streamObject`, and `generateObject` call auto-bills on every step finish. No manual token counting, no per-route instrumentation.
+
+## Setup
+
+Pass the Vercel AI SDK module to `biller.ai()` with your pricing config:
+
+```typescript
+import * as ai from "ai";
+import { scrawn, mul, inputTokens, outputTokens } from "@scrawn/core";
+
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+});
+
+const aii = biller.ai(ai, {
+  inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
+  outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
+});
+```
+
+The returned `aii` object has the same API as the Vercel AI SDK — call `streamText`, `generateText`, etc. exactly as you normally would, just with a `userId` parameter added.
+
+## Usage
+
+Every wrapped function works exactly like the original Vercel AI SDK — just add a `userId` to associate billing:
+
+```typescript
+const result = await aii.streamText({
+  userId: "user-123",             // ← added for billing
+  model: openai("gpt-4o-mini"),
+  prompt: "Hello",
+});
+```
+
+The same pattern applies to `generateText`, `streamObject`, and `generateObject` — all original options and types are preserved.
+
+## Per-Model Pricing
+
+Use tags to charge different rates per model:
+
+```typescript
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  tags: [
+    "GPT_INPUT", "GPT_OUTPUT",
+    "CLAUDE_INPUT", "CLAUDE_OUTPUT",
+    "LLAMA_INPUT", "LLAMA_OUTPUT",
+  ] as const,
+});
+
+const aii = biller.ai(ai, {
+  inputDebit: biller.tag("GPT_INPUT"),
+  outputDebit: biller.tag("GPT_OUTPUT"),
+});
+```
+
+## Manual Tracking (trackAI)
+
+For full manual control without the `biller.ai()` wrapper, use `trackAI()` inside `onFinish` or `onStepFinish`:
+
+```typescript
+import { mul, inputTokens, outputTokens } from "@scrawn/core";
+
+const result = await ai.streamText({
+  model: openai("gpt-4o"),
+  prompt: "Hello",
+  onFinish: async (event) => {
+    await biller.trackAI(
+      "user-123",
+      event.model,
+      event.usage,
+      // Overrides — per-call pricing expressions
+      {
+        inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
+        outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
+      },
+      // Defaults — fallback when no override matches
+      {
+        inputDebit: 3,
+        outputDebit: 6,
+      }
+    );
+  },
+});
+```
+
+## Compatibility
+
+The wrapper supports `ai` SDK versions 3.x and 4.x. If you encounter type issues, ensure `ai` and `@scrawn/core` are both on recent versions.

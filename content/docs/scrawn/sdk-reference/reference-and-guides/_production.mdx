@@ -1,6 +1,6 @@
 ---
-title: Advanced Usage
-description: Advanced patterns, optimization techniques, and best practices
+title: Production Patterns
+description: Error handling, retries, batch processing, and best practices
 ---
 
 ## Overview
@@ -12,22 +12,22 @@ This guide covers advanced usage patterns, optimization techniques, and best pra
 When tracking multiple events, use `Promise.all` for better performance:
 
 ```typescript
-import { Scrawn } from '@scrawn/core';
+import { scrawn } from "@scrawn/core";
 
-const scrawn = new Scrawn({
+const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
   baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
 });
 
 // Track multiple events in parallel
 const events = [
-  { userId: 'user-1', debitAmount: 100 },
-  { userId: 'user-2', debitAmount: 200 },
-  { userId: 'user-3', debitAmount: 150 },
+  { userId: "user-1", debit: 100 },
+  { userId: "user-2", debit: 200 },
+  { userId: "user-3", debit: 150 },
 ];
 
 await Promise.all(
-  events.map(event => scrawn.sdkCallEventConsumer(event))
+    events.map(event => biller.basicUsageEventConsumer(event))
 );
 ```
 
@@ -39,14 +39,14 @@ In persistent servers, await after the response so that the response isn't depen
 
 ```typescript title="app.ts"
 app.post('/api/generate', async (req, res) => {
-  await scrawn.sdkCallEventConsumer({ // [!code --]
+  await biller.basicUsageEventConsumer({ // [!code --]
     userId: req.user.id, // [!code --]
-    debitAmount: 100, // [!code --]
+    debit: 100, // [!code --]
   }); // [!code --]
   // Start tracking (don't await yet) // [!code ++]
-  const trackingPromise = scrawn.sdkCallEventConsumer({ // [!code ++]
+  const trackingPromise = biller.basicUsageEventConsumer({ // [!code ++]
     userId: req.user.id, // [!code ++]
-    debitAmount: 100, // [!code ++]
+    debit: 100, // [!code ++]
   }); // [!code ++]
   
   // Do your work
@@ -75,7 +75,7 @@ app.post('/api/action', async (req, res) => {
   // Queue the event
   await usageQueue.add({
     userId: req.user.id,
-    debitAmount: 10,
+    debit: 10,
   });
   
   // Process request immediately
@@ -85,8 +85,8 @@ app.post('/api/action', async (req, res) => {
 
 // Consumer: Process queue in background
 usageQueue.process(async (job) => {
-  const { userId, debitAmount } = job.data;
-  await scrawn.sdkCallEventConsumer({ userId, debitAmount });
+  const { userId, debit } = job.data;
+  await biller.basicUsageEventConsumer({ userId, debit });
 });
 ```
 
@@ -95,15 +95,15 @@ usageQueue.process(async (job) => {
 Allow your app to continue functioning even if tracking fails:
 
 ```typescript
-async function trackUsageGracefully(userId: string, debitAmount: number) {
+async function trackUsageGracefully(userId: string, debit: number) {
   try {
-    await scrawn.sdkCallEventConsumer({ userId, debitAmount });
+    await biller.basicUsageEventConsumer({ userId, debit });
   } catch (error) {
     // Log error but don't block request
-    console.error('Failed to track usage:', error);
-    
+    console.error("Failed to track usage:", error);
+
     // Optional: Queue for later retry
-    await queueForRetry({ userId, debitAmount, error });
+    await queueForRetry({ userId, debit, error });
   }
 }
 ```
@@ -113,17 +113,17 @@ async function trackUsageGracefully(userId: string, debitAmount: number) {
 Always create the SDK instance once and reuse it:
 
 ```typescript title="lib/scrawn.ts"
-import { Scrawn } from '@scrawn/core';
+import { scrawn } from "@scrawn/core";
 
-export const scrawn = new Scrawn({
+export const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
 });
 ```
 
 ```typescript title="app/api/route.ts"
-import { scrawn } from '@/lib/scrawn';
+import { biller } from "@/lib/scrawn";
 
 // Use the shared instance
-await scrawn.sdkCallEventConsumer({ userId: 'user-123', debitAmount: 10 });
+await biller.basicUsageEventConsumer({ userId: "user-123", debit: 10 });
 ```

@@ -1,0 +1,68 @@
+---
+title: Overview
+description: Meter AI token usage by streaming events to the backend
+---
+
+Stream token usage events directly with `aiTokenStreamConsumer`, or use the [first-class Vercel AI SDK wrapper](/sdk-reference/functions/ai-token-billing/vercel-ai-sdk) that auto-instruments every LLM call.
+
+## Stream Token Events
+
+`aiTokenStreamConsumer` consumes an async iterable of `AITokenUsagePayload` objects and streams them to the backend for billing.
+
+```typescript
+import { scrawn } from "@scrawn/core";
+
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+});
+
+const response = await biller.aiTokenStreamConsumer({
+  userId: "user-123",
+  model: "gpt-4",
+  inputTokens: 100,
+  outputTokens: 50,
+  inputDebit: 3,     // 3¢ per input token
+  outputDebit: 6,    // 6¢ per output token
+});
+// → { eventsProcessed: 1 }
+```
+
+### Fork Mode
+
+Return a forked stream to simultaneously bill and stream tokens to the user:
+
+```typescript
+const { response, stream } = await biller.aiTokenStreamConsumer(
+  tokenStream(),
+  { return: true }
+);
+
+// Stream tokens to user while billing runs in background
+for await (const token of stream) {
+  process.stdout.write(token.outputTokens.toString());
+}
+
+const result = await response;
+```
+
+## AITokenUsagePayload
+
+Each payload in the stream represents a single token usage event:
+
+| Field | Type | Description |
+|---|---|---|
+| `userId` | `string` | User to bill |
+| `model` | `string` | Model identifier (e.g. `"gpt-4"`) |
+| `inputTokens` | `number` | Input token count |
+| `outputTokens` | `number` | Output token count |
+| `inputDebit` | `Debit` | Pricing for input tokens — number, tag, or expression |
+| `outputDebit` | `Debit` | Pricing for output tokens |
+| `provider` | `string` | (optional) LLM provider |
+| `inputCacheTokens` | `number` | (optional) Cached input tokens |
+| `inputCacheDebit` | `Debit` | (optional) Pricing for cached input |
+| `outputCacheTokens` | `number` | (optional) Cached output tokens |
+| `outputCacheDebit` | `Debit` | (optional) Pricing for cached output |
+| `metadata` | `object` | (optional) Arbitrary metadata |
+
+The `Debit` type accepts a number (cents), a `biller.tag()` reference, or a pricing expression using `mul()`, `add()`, `inputTokens()`, etc.

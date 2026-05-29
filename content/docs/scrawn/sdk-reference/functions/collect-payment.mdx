@@ -1,5 +1,5 @@
 ---
-title: Collect Payment
+title: Collect Payments
 description: Generate checkout links to collect payments from users
 ---
 
@@ -10,15 +10,15 @@ The `collectPayment` method generates a checkout link for users to complete thei
 ## Basic Usage
 
 ```typescript
-import { Scrawn } from '@scrawn/core';
+import { scrawn } from "@scrawn/core";
 
-const scrawn = new Scrawn({
+const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
 });
 
 // Generate checkout link
-const checkoutLink = await scrawn.collectPayment('user-123');
+const checkoutLink = await biller.collectPayment("user-123");
 
 // Redirect user to payment page
 res.redirect(checkoutLink);
@@ -45,30 +45,28 @@ res.redirect(checkoutLink);
 ### Express.js Endpoint
 
 ```typescript
-import express from 'express';
-import { Scrawn } from '@scrawn/core';
+import express from "express";
+import { scrawn } from "@scrawn/core";
 
 const app = express();
 app.use(express.json());
 
-const scrawn = new Scrawn({
+const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || 'http://localhost:8069',
+  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
 });
 
-app.post('/api/collect-payment', async (req, res) => {
+app.post("/api/collect-payment", async (req, res) => {
   try {
     const { userId } = req.body;
-    
     if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
+      return res.status(400).json({ error: "userId is required" });
     }
-
-    const checkoutLink = await scrawn.collectPayment(userId);
+    const checkoutLink = await biller.collectPayment(userId);
     res.redirect(checkoutLink);
   } catch (error) {
-    console.error('Failed to collect payment:', error);
-    res.status(500).json({ error: 'Failed to create checkout link' });
+    console.error("Failed to collect payment:", error);
+    res.status(500).json({ error: "Failed to create checkout link" });
   }
 });
 ```
@@ -77,8 +75,8 @@ app.post('/api/collect-payment', async (req, res) => {
 
 ```typescript
 try {
-  const checkoutLink = await scrawn.collectPayment(userId);
-  console.log('Checkout link created:', checkoutLink);
+  const checkoutLink = await biller.collectPayment(userId);
+  console.log("Checkout link created:", checkoutLink);
 } catch (error) {
   console.error('Error creating checkout link:', error);
   // Handle error appropriately
@@ -96,7 +94,7 @@ if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
   return res.status(400).json({ error: 'Valid userId is required' });
 }
 
-const checkoutLink = await scrawn.collectPayment(userId);
+  const checkoutLink = await biller.collectPayment(userId);
 ```
 
 ### 2. Exclude from Tracking
@@ -104,10 +102,10 @@ const checkoutLink = await scrawn.collectPayment(userId);
 Make sure to exclude the payment endpoint from usage tracking middleware:
 
 ```typescript
-app.use(scrawn.middlewareEventConsumer({
+app.use(biller.middlewareEventConsumer({
   extractor: (req) => ({
     userId: req.user.id,
-    debitAmount: 10,
+    debit: 10,
   }),
   blacklist: ['/api/collect-payment'], // Don't charge for payment collection
 }));
@@ -116,10 +114,10 @@ app.use(scrawn.middlewareEventConsumer({
 ## Next Steps
 
 <Cards>
-  <Card href="/scrawn-js/sdk-call-event" title="Track Usage Events">
-    Learn how to track billable usage
+  <Card href="/sdk-reference/functions/usage-tracking" title="Usage Tracking">
+    Learn how to track billable events
   </Card>
-  <Card href="/scrawn-js/middleware-call" title="Middleware Integration">
-    Automatically track API requests
+  <Card href="/sdk-reference/functions/ai-token-billing" title="AI Token Billing">
+    Meter AI token usage per-call
   </Card>
 </Cards>

@@ -27,7 +27,7 @@ The core backend handles event tracking, usage calculation, and payment processi
 **Tech Stack**: TypeScript  
 **Good for**: SDK design, developer experience, client libraries
 
-The TypeScript/JavaScript SDK that developers integrate into their applications. See [SDK Guide](/scrawn-js) for usage.
+The TypeScript/JavaScript SDK that developers integrate into their applications. See [SDK Reference](/sdk-reference) for usage.
 
 ### Dashboard
 **Repository**: [github.com/ScrawnDotDev/Dashboard](https://github.com/ScrawnDotDev/Dashboard)  
@@ -160,7 +160,7 @@ This adds `Signed-off-by: Your Name <your.email@example.com>` to your commit mes
 **Important**: Every new abstraction layer or event ingestion method in the SDK **MUST** have a corresponding example file in `Scrawn.js/examples/`.
 
 For example:
-- `sdkCallEventConsumer()` → `examples/sdkcall-usage.ts`
+- `basicUsageEventConsumer()` → `examples/basic-usage.ts`
 - `middlewareEventConsumer()` → `examples/middleware-usage.ts`
 - `aiTokenStreamConsumer()` → `examples/ai-token-stream-usage.ts`
 

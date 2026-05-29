@@ -1,6 +1,6 @@
 ---
-title: Backend Deployment
-description: Deploy your Scrawn backend locally or to production
+title: Local Setup
+description: Run your Scrawn backend locally for development
 ---
 
 This guide covers running Scrawn backend locally for development and deploying it to production.
@@ -36,9 +36,11 @@ Server listening on http://localhost:8069
 
 When running locally, configure your SDK with:
 ```typescript
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY,
-  baseURL: 'http://localhost:8069', // [!code highlight]
+import { scrawn } from "@scrawn/core";
+
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
+  baseURL: "http://localhost:8069", // [!code highlight]
 });
 ```
 
@@ -195,18 +197,16 @@ Never expose your backend directly on HTTP in production. Always use HTTPS via a
 After deployment, verify your backend is working:
 
 ```typescript
-import { Scrawn } from '@scrawn/core';
+import { scrawn } from "@scrawn/core";
 
-const scrawn = new Scrawn({
-  apiKey: process.env.SCRAWN_KEY,
-  baseURL: 'https://your-base-url',
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
+  baseURL: "https://your-base-url",
 });
 
 try {
-  const result = await scrawn.createCheckoutLink({
-    userId: 'test-user-id',
-  });
-  console.log('✅ Backend is working!', result);
+  const result = await biller.collectPayment("test-user-id");
+  console.log("✅ Backend is working!", result);
 } catch (error) {
   console.error('❌ Backend error:', error);
 }
@@ -233,7 +233,7 @@ try {
 ## Next Steps
 
 <Cards>
-  <Card href="/scrawn-js" title="SDK Guide">
+  <Card href="/sdk-reference" title="SDK Reference">
     Learn how to use the Scrawn SDK in your application
   </Card>
 

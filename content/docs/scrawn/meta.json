@@ -5,9 +5,8 @@
   "pages": [
     "index",
     "quick-start",
-    "backend-deployment",
+    "local-setup",
     "dashboard-setup",
-    "scrawn-js",
-    "api-reference"
+    "sdk-reference"
   ]
 }
