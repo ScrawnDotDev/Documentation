@@ -93,7 +93,7 @@ export const HeroSection = () => {
                   <p className="text-lg text-fd-muted-foreground">
                     One import. One call. Your AI SDK calls are now billed
                     automatically. No webhooks, no spreadsheets, no crying in
-                    the bathroom. 
+                    the bathroom.
                   </p>
                 </div>
                 <div className="min-w-0">
