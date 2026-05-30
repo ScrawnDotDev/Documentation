@@ -110,14 +110,18 @@ await biller.basicUsageEventConsumer({
 For AI token billing, use `inputTokens()` and `outputTokens()` as placeholders:
 
 ```typescript
-await biller.aiTokenStreamConsumer({
-  userId: "user-123",
-  model: "gpt-4",
-  inputTokens: 100,
-  outputTokens: 50,
-  inputDebit: mul(biller.tag("GPT_INPUT_RATE"), inputTokens()),
-  outputDebit: mul(biller.tag("GPT_OUTPUT_RATE"), outputTokens()),
-});
+async function* generateUsage() {
+  yield {
+    userId: "user-123",
+    model: "gpt-4",
+    inputTokens: 100,
+    outputTokens: 50,
+    inputDebit: mul(biller.tag("GPT_INPUT_RATE"), inputTokens()),
+    outputDebit: mul(biller.tag("GPT_OUTPUT_RATE"), outputTokens()),
+  };
+}
+
+await biller.aiTokenStreamConsumer(generateUsage());
 ```
 
 ## Persisted Expressions

@@ -70,23 +70,27 @@ For full manual control without the `biller.ai()` wrapper, use `trackAI()` insid
 ```typescript
 import { mul, inputTokens, outputTokens } from "@scrawn/core";
 
-const result = await ai.streamText({
+ai.streamText({
   model: openai("gpt-4o"),
   prompt: "Hello",
   onFinish: async (event) => {
     await biller.trackAI(
       "user-123",
       event.model,
-      event.usage,
-      // Overrides — per-call pricing expressions
+      {
+        inputTokens: event.usage.inputTokens ?? 0,
+        outputTokens: event.usage.outputTokens ?? 0,
+        totalTokens: event.usage.totalTokens ?? 0,
+      },
       {
         inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
         outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
       },
-      // Defaults — fallback when no override matches
       {
         inputDebit: 3,
         outputDebit: 6,
+        inputCacheDebit: 3,
+        outputCacheDebit: 6,
       }
     );
   },

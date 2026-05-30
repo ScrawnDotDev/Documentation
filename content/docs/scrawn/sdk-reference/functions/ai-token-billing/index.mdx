@@ -17,14 +17,18 @@ const biller = scrawn({
   baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
 });
 
-const response = await biller.aiTokenStreamConsumer({
-  userId: "user-123",
-  model: "gpt-4",
-  inputTokens: 100,
-  outputTokens: 50,
-  inputDebit: 3,     // 3¢ per input token
-  outputDebit: 6,    // 6¢ per output token
-});
+async function* generateUsage() {
+  yield {
+    userId: "user-123",
+    model: "gpt-4",
+    inputTokens: 100,
+    outputTokens: 50,
+    inputDebit: 3,     // 3¢ per input token
+    outputDebit: 6,    // 6¢ per output token
+  };
+}
+
+const response = await biller.aiTokenStreamConsumer(generateUsage());
 // → { eventsProcessed: 1 }
 ```
 
@@ -33,6 +37,17 @@ const response = await biller.aiTokenStreamConsumer({
 Return a forked stream to simultaneously bill and stream tokens to the user:
 
 ```typescript
+async function* tokenStream() {
+  yield {
+    userId: "user-123",
+    model: "gpt-4",
+    inputTokens: 100,
+    outputTokens: 50,
+    inputDebit: 3,
+    outputDebit: 6,
+  };
+}
+
 const { response, stream } = await biller.aiTokenStreamConsumer(
   tokenStream(),
   { return: true }
