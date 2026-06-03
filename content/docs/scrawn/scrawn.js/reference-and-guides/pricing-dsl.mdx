@@ -1,0 +1,189 @@
+---
+title: Pricing DSL
+description: Type-safe pricing expressions with mul, add, tag, inputTokens, and more
+---
+
+Scrawn includes a type-safe DSL for expressing pricing logic. Use the builder functions (`mul`, `add`, `tag`, etc.) to build expressions, then wrap them with `biller.expr()` wherever a `debit` value is accepted.
+
+## Builder functions
+
+These functions create expression nodes. Combine them with `biller.tag()`, `biller.expr()`, and numeric values.
+
+### `biller.tag("NAME")` <span className="inline-flex items-center rounded-sm border border-[#feaa02] bg-[#feaa02]/10 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-[#feaa02]">Events & AI</span>
+
+Reference a price tag managed via dashboard on the backend.
+
+```typescript
+biller.tag("PREMIUM_CALL");
+biller.tag("EXTRA_FEE");
+```
+
+<TypeTable type={{
+  name: {
+    type: "string",
+    description: "The tag name registered on the backend",
+    required: true,
+  },
+}} />
+
+### `mul(...args)` <span className="inline-flex items-center rounded-sm border border-[#feaa02] bg-[#feaa02]/10 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-[#feaa02]">Events & AI</span>
+
+Multiply two or more values.
+
+```typescript
+import { mul } from "@scrawn/core";
+
+mul(biller.tag("PER_TOKEN"), 100);
+mul(biller.tag("BASE_RATE"), 2, biller.tag("MULTIPLIER"));
+```
+
+<TypeTable type={{
+  args: {
+    type: "...PriceExpr[]",
+    description: "Two or more values to multiply",
+    required: true,
+  },
+}} />
+
+### `add(...args)` <span className="inline-flex items-center rounded-sm border border-[#feaa02] bg-[#feaa02]/10 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-[#feaa02]">Events & AI</span>
+
+Add two or more values.
+
+```typescript
+import { add } from "@scrawn/core";
+
+add(biller.tag("PREMIUM_CALL"), biller.tag("EXTRA_FEE"));
+add(biller.tag("BASE"), 250, biller.expr(100));
+```
+
+<TypeTable type={{
+  args: {
+    type: "...PriceExpr[]",
+    description: "Two or more values to add",
+    required: true,
+  },
+}} />
+
+### `sub(...args)` <span className="inline-flex items-center rounded-sm border border-[#feaa02] bg-[#feaa02]/10 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-[#feaa02]">Events & AI</span>
+
+Subtract values.
+
+```typescript
+import { sub } from "@scrawn/core";
+
+sub(biller.tag("GROSS"), biller.tag("DISCOUNT"));
+```
+
+<TypeTable type={{
+  args: {
+    type: "...PriceExpr[]",
+    description: "Two or more values to subtract",
+    required: true,
+  },
+}} />
+
+### `div(...args)` <span className="inline-flex items-center rounded-sm border border-[#feaa02] bg-[#feaa02]/10 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-[#feaa02]">Events & AI</span>
+
+Integer division.
+
+```typescript
+import { div } from "@scrawn/core";
+
+div(biller.tag("TOTAL"), 2);
+```
+
+<TypeTable type={{
+  args: {
+    type: "...PriceExpr[]",
+    description: "Two or more values to divide (integer division)",
+    required: true,
+  },
+}} />
+
+### `inputTokens()` <span className="inline-flex items-center rounded-sm border border-[#feaa02] bg-[#feaa02]/10 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-[#feaa02]">AI only</span>
+### `outputTokens()` <span className="inline-flex items-center rounded-sm border border-[#feaa02] bg-[#feaa02]/10 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wider text-[#feaa02]">AI only</span>
+
+Token count placeholders that resolve to the actual token count of the current AI call. Only valid inside `AITokenUsagePayload` objects.
+
+No parameters. Returns a `PriceExpr` that resolves to the token count at billing time.
+
+```typescript
+import { mul, inputTokens, outputTokens } from "@scrawn/core";
+
+mul(biller.tag("GPT_INPUT_RATE"), inputTokens());
+mul(biller.tag("GPT_OUTPUT_RATE"), outputTokens());
+```
+
+## Nested expressions
+
+You can nest `biller.expr()` references inside compound expressions - useful when one persisted expression references another, or when mixing persisted expressions with inline pricing:
+
+```typescript
+import { mul } from "@scrawn/core";
+
+// biller.expr("COMPLEX_FEE") returns an ExprRef that serializes
+// to "expr(COMPLEX_FEE)" inside the larger expression string.
+biller.expr(mul(biller.tag("EXTRA_FEE"), biller.expr("COMPLEX_FEE")));
+// → serialized as: mul(tag(EXTRA_FEE), expr(COMPLEX_FEE))
+```
+
+The backend resolves `expr(COMPLEX_FEE)` from its persisted expression store at evaluation time.
+
+## Usage in Events
+
+Pass a pricing expression where a `debit` value is accepted.
+
+Tag reference:
+
+```typescript
+import { biller } from "./scrawn/biller";
+
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: biller.tag("PREMIUM_CALL"),
+});
+```
+
+Compound expression - wrap with `biller.expr()`:
+
+```typescript
+import { biller } from "./scrawn/biller";
+import { mul } from "@scrawn/core";
+
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: biller.expr(mul(biller.tag("PER_CALL"), 3)),
+});
+```
+
+For AI token billing, use `inputTokens()` and `outputTokens()` as placeholders:
+
+```typescript
+async function* generateUsage() {
+  yield {
+    userId: "user-123",
+    model: "gpt-4",
+    inputTokens: 100,
+    outputTokens: 50,
+    inputDebit: biller.expr(mul(biller.tag("GPT_INPUT_RATE"), inputTokens())),
+    outputDebit: biller.expr(mul(biller.tag("GPT_OUTPUT_RATE"), outputTokens())),
+  };
+}
+
+await biller.aiTokenStreamConsumer(generateUsage());
+```
+
+## Persisted Expressions
+
+Store complex expressions on the backend and reference them by name:
+
+```typescript
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: biller.expr("MY_PRICING_EXPR"),
+});
+```
+
+## Error Handling
+
+Invalid expressions (wrong types, missing operands, etc.) throw `PricingExpressionError` at runtime. The TypeScript types catch most issues at compile time.

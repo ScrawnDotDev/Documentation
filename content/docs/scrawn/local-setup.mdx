@@ -7,7 +7,7 @@ This guide covers running Scrawn backend locally for development and deploying i
 
 ## CLI Setup
 
-The Scrawn CLI automates the entire local development stack — PostgreSQL, ClickHouse, server, and dashboard — with a few commands.
+The Scrawn CLI automates the entire local development stack - PostgreSQL, ClickHouse, server, and dashboard - with a few commands.
 
 ### Initialize the Stack
 
@@ -29,16 +29,21 @@ You need Docker and Docker Compose installed. The CLI uses them to run the infra
 bunx scrawn@latest start
 ```
 
-This starts the full Scrawn stack — PostgreSQL, ClickHouse, the gRPC server, and the dashboard — with docker compose. All services run in the background.
+This starts the full Scrawn stack - PostgreSQL, ClickHouse, the gRPC server, and the dashboard - with docker compose. All services run in the background.
 
 ### Configure the SDK
 
 ```typescript
+// scrawn/biller.ts
 import { scrawn } from "@scrawn/core";
+import { TAGS, EXPRESSIONS } from "./pricerefs";
 
-const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: "http://localhost:8069",
+export const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  httpUrl: process.env.SCRAWN_HTTP_URL,
+  tags: TAGS,
+  expressions: EXPRESSIONS,
 });
 ```
 
@@ -52,7 +57,7 @@ bunx scrawn@latest reset  # Wipes all data volumes
 ## Next Steps
 
 <Cards>
-  <Card href="/sdk-reference" title="SDK Reference">
+  <Card href="/scrawn.js" title="SDK Reference">
     Learn how to use the Scrawn SDK in your application
   </Card>
 

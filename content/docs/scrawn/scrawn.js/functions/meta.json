@@ -3,6 +3,7 @@
   "pages": [
     "usage-tracking",
     "ai-token-billing",
-    "collect-payment"
+    "collect-payment",
+    "webhook"
   ]
 }

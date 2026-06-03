@@ -3,7 +3,7 @@ title: Quick Start
 description: Install the SDK and start billing in under a minute.
 ---
 
-Install the SDK and start tracking billable events — no backend setup or config required.
+Install the SDK, sync your tags, and start tracking billable events.
 
 ## 1. Install
 
@@ -25,112 +25,93 @@ Install the SDK and start tracking billable events — no backend setup or confi
   </Tab>
 </Tabs>
 
-## 2. Initialize
+## 2. Configure
+
+Create a `scrawn.config.ts` in your project root:
 
 ```typescript
-import { scrawn, tag } from "@scrawn/core";
+import { scrawnConfig } from "@scrawn/core";
 
-const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+export default scrawnConfig({
+  apiKey: process.env.SCRAWN_KEY!,
+  grpcUrl: process.env.SCRAWN_BASE_URL!,
+  httpUrl: process.env.SCRAWN_HTTP_URL!,
+  directory: "scrawn",
 });
 ```
 
-## 3. Track Basic Usage
+Add these to your `.env.local` or `.env`:
 
-Call `basicUsageEventConsumer` whenever a billable action happens:
+```bash
+SCRAWN_KEY=scrn_live_abc123def456ghi789jkl012mno345pq
+SCRAWN_BASE_URL=http://localhost:8069
+SCRAWN_HTTP_URL=http://localhost:8070
+```
+
+## 3. Sync tags & expressions
+
+```bash
+bunx scrawn tag sync
+```
+
+This generates `scrawn/pricerefs.ts` with your tags and expressions as compile-time checked types.
+
+<Callout type="info">
+Every time you update tags or expressions on the dashboard, run `bunx scrawn tag sync` again to keep your types in sync.
+</Callout>
+
+## 4. Create your biller
 
 ```typescript
-// Direct amount — 500 cents = $5.00
+// scrawn/biller.ts
+import { scrawn } from "@scrawn/core";
+import { TAGS, EXPRESSIONS } from "./pricerefs.ts";
+
+export const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY as string,
+  baseURL: process.env.SCRAWN_BASE_URL as string,
+  httpUrl: process.env.SCRAWN_HTTP_URL as string,
+  tags: TAGS,
+  expressions: EXPRESSIONS,
+});
+```
+
+## 5. Track usage
+
+Smallest currency unit - 250:
+
+```typescript
+import { biller } from "./scrawn/biller";
+
 await biller.basicUsageEventConsumer({
   userId: "user-123",
-  debit: 500,
+  debit: 250,
 });
+```
 
-// Or reference a price tag managed on the backend
+Or with a pricing expression:
+
+```typescript
+import { biller } from "./scrawn/biller";
+import { mul } from "@scrawn/core";
+
 await biller.basicUsageEventConsumer({
   userId: "user-123",
-  debit: tag("PREMIUM_CALL"),
+  debit: biller.expr(mul(biller.tag("API_CALL"), 3)),
 });
 ```
 
-## 4. Track AI Token Usage
+<Callout type="info">
+For middleware tracking, AI token billing, and framework adapters, check the [usage tracking guide](/scrawn.js/functions/usage-tracking).
+</Callout>
 
-Stream per-token usage with an async generator:
+## 6. Collect payment
 
-```typescript
-async function* generateTokenUsage() {
-  yield {
-    userId: "user-123",
-    model: "gpt-4",
-    inputTokens: 100,
-    outputTokens: 50,
-    inputDebit: 3,   // 3¢ per input token
-    outputDebit: 6,  // 6¢ per output token
-  };
-}
-
-const response = await biller.aiTokenStreamConsumer(generateTokenUsage());
-// → { eventsProcessed: 1 }
-```
-
-Or wrap the Vercel AI SDK with `biller.ai()` to auto-bill every LLM call:
-
-```typescript
-import * as ai from "ai";
-
-const aii = biller.ai(ai, {
-  inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
-  outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
-});
-
-const result = await aii.streamText({
-  userId: "user-123",
-  model: openai("gpt-4o-mini"),
-  prompt: "Hello",
-});
-```
-
-## 5. Collect Payment
-
-When a user's balance crosses your threshold, collect with one call:
+When a user&#39;s balance crosses your threshold, collect with one call:
 
 ```typescript
 const checkoutLink = await biller.collectPayment("user-123");
-// → "https://checkout.dodopayments.com/..."
+// → "http://localhost:3000/checkout/ses_abc123..."
 ```
 
-## 7. Install SDK in Your Project
-
-Now integrate Scrawn into your application:
-
-<Tabs items={['bun', 'npm', 'yarn']}>
-  <Tab value="bun">
-    ```bash
-    bun add @scrawn/core
-    ```
-  </Tab>
-  <Tab value="npm">
-    ```bash
-    npm install @scrawn/core
-    ```
-  </Tab>
-  <Tab value="yarn">
-    ```bash
-    yarn add @scrawn/core
-    ```
-  </Tab>
-</Tabs>
-
-
-<Cards>
-  <Card href="/sdk-reference/functions/usage-tracking" title="Usage Tracking">
-    Track billable events manually or with middleware
-  </Card>
-  <Card href="/sdk-reference/functions/ai-token-billing" title="AI Token Billing">
-    Meter AI token usage per-call
-  </Card>
-  <Card href="/sdk-reference/reference-and-guides/pricing-dsl" title="Pricing DSL">
-    Type-safe expressions with mul(), add(), and tag()
-  </Card>
-</Cards>
+No checkout URL manipulation needed - Scrawn creates the session, Scrawn proxies the link.

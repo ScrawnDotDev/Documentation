@@ -9,18 +9,18 @@ The `collectPayment` method generates a checkout link for users to complete thei
 
 ## Basic Usage
 
+Generate a checkout link for a user:
+
 ```typescript
-import { scrawn } from "@scrawn/core";
+import { biller } from "./scrawn/biller";
 
-const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
-});
-
-// Generate checkout link
 const checkoutLink = await biller.collectPayment("user-123");
+```
 
-// Redirect user to payment page
+Redirect them to the payment page:
+
+```typescript
+// In your route handler (Express, Next.js, etc.)
 res.redirect(checkoutLink);
 ```
 
@@ -30,24 +30,31 @@ res.redirect(checkoutLink);
 
 ## Parameters
 
-| Param | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `userId` | `string` | Yes |  | The unique identifier of the user to collect payment from |
+<TypeTable type={{
+  userId: {
+    description: "The unique identifier of the user to collect payment from",
+    type: "string",
+    required: true,
+  },
+}} />
 
 ## Response
 
-| Type | Description |
-|---|---|
-| `Promise<string>` | A checkout URL where the user can complete their payment |
+<TypeTable type={{
+  checkoutLink: {
+    description: "A checkout URL where the user can complete their payment",
+    type: "Promise<string>",
+  },
+}} />
 
 
 ## Next Steps
 
 <Cards>
-  <Card href="/sdk-reference/functions/usage-tracking" title="Usage Tracking">
+  <Card href="/scrawn.js/functions/usage-tracking" title="Usage Tracking">
     Learn how to track billable events
   </Card>
-  <Card href="/sdk-reference/functions/ai-token-billing" title="AI Token Billing">
+  <Card href="/scrawn.js/functions/ai-token-billing" title="AI Token Billing">
     Meter AI token usage per-call
   </Card>
 </Cards>

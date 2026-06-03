@@ -1,0 +1,129 @@
+---
+title: Overview
+description: Meter AI token usage by streaming events to the backend
+---
+
+Stream token usage events directly with `aiTokenStreamConsumer`, or use the [first-class Vercel AI SDK wrapper](/scrawn.js/functions/ai-token-billing/vercel-ai-sdk) that auto-instruments every LLM call.
+
+## Stream Token Events
+
+`aiTokenStreamConsumer` consumes an async iterable of `AITokenUsagePayload` objects and streams them to the backend for billing.
+
+```typescript
+import { biller } from "../scrawn/biller";
+
+async function* generateUsage() {
+  yield {
+    userId: "user-123",
+    model: "gpt-4",
+    inputTokens: 100,
+    outputTokens: 50,
+    inputDebit: 3,
+    outputDebit: 6,
+  };
+}
+
+const response = await biller.aiTokenStreamConsumer(generateUsage());
+```
+
+### Fork mode
+
+Return a forked stream to simultaneously bill and stream tokens to the user:
+
+```typescript
+import { biller } from "../scrawn/biller";
+
+async function* tokenStream() {
+  yield {
+    userId: "user-123",
+    model: "gpt-4",
+    inputTokens: 100,
+    outputTokens: 50,
+    inputDebit: biller.tag("GPT_INPUT"),
+    outputDebit: biller.expr("COMPLEX_FEE"),
+  };
+}
+
+const { response, stream } = await biller.aiTokenStreamConsumer(
+  tokenStream(),
+  { return: true }
+);
+
+// Stream tokens to user while billing runs in background
+for await (const token of stream) {
+  process.stdout.write(token.outputTokens.toString());
+}
+
+const result = await response;
+```
+
+## Configuration
+
+<TypeTable type={{
+  return: {
+    description: "When `true`, returns a forked stream so you can simultaneously bill and stream tokens to the user",
+    type: "boolean",
+    default: "false",
+  },
+}} />
+
+## AITokenUsagePayload
+
+Each payload in the stream represents a single token usage event:
+
+<TypeTable type={{
+  userId: {
+    type: "string",
+    description: "User to bill",
+    required: true,
+  },
+  model: {
+    type: "string",
+    description: "Model identifier (e.g. `gpt-4`)",
+    required: true,
+  },
+  inputTokens: {
+    type: "number",
+    description: "Input token count",
+    required: true,
+  },
+  outputTokens: {
+    type: "number",
+    description: "Output token count",
+    required: true,
+  },
+  inputDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for input tokens - number, `biller.tag()`, or `biller.expr()` expression",
+    required: true,
+  },
+  outputDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for output tokens",
+    required: true,
+  },
+  provider: {
+    type: "string",
+    description: "LLM provider identifier",
+  },
+  inputCacheTokens: {
+    type: "number",
+    description: "Cached input token count",
+  },
+  inputCacheDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for cached input tokens",
+  },
+  outputCacheTokens: {
+    type: "number",
+    description: "Cached output token count",
+  },
+  outputCacheDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for cached output tokens",
+  },
+  metadata: {
+    type: "object",
+    description: "Arbitrary metadata attached to the event",
+  },
+}} />

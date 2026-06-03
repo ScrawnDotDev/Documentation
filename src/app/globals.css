@@ -11,3 +11,25 @@
     --color-fd-primary: #feaa02; /* Warm honey-orange for dark mode */
     --color-fd-primary-foreground: oklch(0.2 0 0);
 }
+
+/* Diff line annotations — used with // [!code --] and // [!code ++] */
+pre.has-diff .diff.remove {
+  background-color: rgba(239, 68, 68, 0.15);
+  --tw-border-l-color: rgb(239 68 68);
+  border-left: 2px solid rgb(239 68 68);
+}
+pre.has-diff .diff.remove::before {
+  content: "-";
+  color: rgb(239 68 68);
+  margin-right: 0.5rem;
+}
+pre.has-diff .diff.add {
+  background-color: rgba(34, 197, 94, 0.15);
+  --tw-border-l-color: rgb(34 197 94);
+  border-left: 2px solid rgb(34 197 94);
+}
+pre.has-diff .diff.add::before {
+  content: "+";
+  color: rgb(34 197 94);
+  margin-right: 0.5rem;
+}

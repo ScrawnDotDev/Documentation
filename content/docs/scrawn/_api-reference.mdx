@@ -19,11 +19,11 @@ Creates a billing instance.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `apiKey` | `string` | — | Your Scrawn API key (starts with `scrn_`) |
-| `baseURL` | `string` | — | Backend server URL |
+| `apiKey` | `string` | - | Your Scrawn API key (starts with `scrn_`) |
+| `baseURL` | `string` | - | Backend server URL |
 | `secure` | `boolean` | `true` | Whether to use TLS for gRPC. Set to `false` for local dev |
-| `tags` | `readonly string[]` | — | Known tag names for compile-time type checking on `biller.tag()` |
-| `expressions` | `readonly string[]` | — | Known expression names for compile-time type checking on `biller.expr()` |
+| `tags` | `readonly string[]` | - | Known tag names for compile-time type checking on `biller.tag()` |
+| `expressions` | `readonly string[]` | - | Known expression names for compile-time type checking on `biller.expr()` |
 | `retryCount` | `number` | `2` | Auto-retry attempts on transient network errors |
 
 **Example:**
@@ -57,7 +57,7 @@ Track a billable usage event.
 **Example:**
 
 ```typescript
-// Direct amount — 500 cents = $5.00
+// Direct amount - 500 cents = $5.00
 await biller.basicUsageEventConsumer({
   userId: "user-123",
   debit: 500,
@@ -500,9 +500,9 @@ interface EventPayload<TTag extends string = string> {
 ```
 
 The `debit` field accepts:
-- A number (cents) — e.g. `500` for $5.00
-- A `tag()` reference — e.g. `tag("PREMIUM_CALL")`
-- A pricing expression — e.g. `mul(tag("PER_CALL"), 3)`
+- A number (cents) - e.g. `500` for $5.00
+- A `tag()` reference - e.g. `tag("PREMIUM_CALL")`
+- A pricing expression - e.g. `mul(tag("PER_CALL"), 3)`
 
 ### AITokenUsagePayload
 
@@ -634,7 +634,7 @@ Authorization: Bearer scrn_your_api_key
   <Card href="/quick-start" title="Quick Start">
     Get started with scrawn in minutes
   </Card>
-  <Card href="/sdk-reference" title="SDK Reference">
+  <Card href="/scrawn.js" title="SDK Reference">
     SDK integration in your code
   </Card>
 </Cards>

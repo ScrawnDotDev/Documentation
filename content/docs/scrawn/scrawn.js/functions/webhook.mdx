@@ -1,0 +1,82 @@
+---
+title: Webhook Verification
+description: Receive typed webhook events without parsing the payload yourself
+---
+
+Scrawn forwards DodoPayments webhooks to your endpoint with the signature and event data. Instead of manually parsing headers, guessing event types, and constructing types - just pass the `Request` to `biller.webhook()` and get a typed event back.
+
+```typescript
+import { biller } from "./scrawn/biller";
+
+app.post("/webhooks/scrawn", async (req, res) => {
+  const event = await biller.webhook(toWebRequest(req, rawBody));
+
+  // event is typed - no guessing
+  // event.resource: "payment"
+  // event.action: "succeeded" | "failed"
+  // event.data contains the parsed payload
+  // event.rawData contains the raw DodoPayments webhook object
+  switch (event.action) {
+    case "succeeded":
+      console.log(event.data.amount); // typed, smallest currency unit
+      break;
+    case "failed":
+      console.error(event.data.error);
+      break;
+  }
+
+  res.status(200).send("OK");
+});
+```
+
+No signature parsing, no header extraction, no manual type assertions - one call, typed and verified.
+
+Behind the scenes, `biller.webhook()` fetches your Ed25519 public key from the backend, extracts the `webhook-id`, `webhook-timestamp`, and `webhook-signature` headers (Standard Webhooks spec), verifies the signature against the raw body - then parses and returns the typed event. All of it, one call.
+
+## Parameters
+
+<TypeTable type={{
+  request: {
+    type: "Request",
+    description: "The incoming HTTP request object. Pass from your framework handler",
+    required: true,
+  },
+}} />
+
+## Returns
+
+<TypeTable type={{
+  event: {
+    type: "Promise<WebhookEvent>",
+    description: "A typed event with `resource`, `action`, and `data`. No manual parsing needed",
+  },
+}} />
+
+## Framework adapter
+
+Express/Node.js `IncomingMessage` doesn't match the `fetch`-compatible `Request` that `biller.webhook()` expects. Use `toWebRequest()` to convert it:
+
+```typescript
+import { toWebRequest } from "@scrawn/core";
+
+app.post("/webhooks/scrawn", async (req, res) => {
+  const rawBody = JSON.stringify(req.body);
+  const event = await biller.webhook(toWebRequest(req, rawBody));
+  // event is fully typed
+});
+```
+
+## Public key caching
+
+The first call to `biller.webhook()` fetches the public key from the backend and caches it in memory. To skip that fetch entirely, pass the key in the constructor:
+
+```typescript
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  httpUrl: process.env.SCRAWN_HTTP_URL,
+  webhookPublicKey: process.env.SCRAWN_WEBHOOK_PUBLIC_KEY, // whpk_... from dashboard
+});
+```
+
+The dashboard displays each API key's public key - paste it into your `.env` and never worry about webhook wiring.

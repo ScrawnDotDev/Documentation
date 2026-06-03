@@ -5,9 +5,9 @@ description: Usage-based billing without the boilerplate. Track AI tokens, API c
 
 import { Zap, Code2, Shield, Cpu, GitCompareArrows } from 'lucide-react';
 
-# Scrawn — The Anti-Billing Billing Tool
+# Scrawn - Usage-based billing in one-ish line
 
-Scrawn is the **open-source usage engine** for developers who wants to charge for usage. Every API call, AI token, or database write, without writing an entire billing platform.
+Scrawn is the **open-source usage engine** for developers who need to charge for usage - API calls, AI tokens, storage, database writes, whatever. One SDK call tracks the event, evaluates your pricing, and hands you a payment link. No billing platform to build.
 
 <Callout type="success" title="Dodo Gets the Cash. We Do the Math.">
 We aggregate usage, evaluate your pricing logic, and hand you a payment link in a single function call. You keep full control of your Dodo Payments account.
@@ -18,24 +18,25 @@ We aggregate usage, evaluate your pricing logic, and hand you a payment link in 
 Scrawn is the **missing aggregation layer** for [DodoPayments](https://dodopayments.com). Instead of wiring up gRPC, PostgreSQL, idempotency keys, auth hashing, and pricing resolvers yourself, you call a single SDK function:
 
 ```typescript
-import { scrawn, tag } from "@scrawn/core";
+import { scrawn } from "@scrawn/core";
 
 const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  httpUrl: process.env.SCRAWN_HTTP_URL,
 });
 
 // Track a billable event
 await biller.basicUsageEventConsumer({
   userId: "user-123",
-  debit: tag("TAG_NAME"),
+  debit: 250,
 });
 
 const billingLink = await biller.collectPayment("user-123");
 ```
 
 <Callout type="success">
-**One function call** — no proto files, no DB migrations, no webhook nightmares.
+**One function call** - no proto files, no DB migrations, no webhook nightmares.
 </Callout>
 
 ## Why Scrawn?
@@ -45,83 +46,49 @@ const billingLink = await biller.collectPayment("user-123");
     We hook into your existing Dodo account. They handle checkout, tax, and PCI compliance. We handle the metering and pricing logic.
   </Card>
   <Card icon={<Cpu />} title="First Class Integrations">
-    Wrap the Vercel AI SDK with `biller.ai(sdk, opts)` and auto-bill every `streamText`, `generateText`, and `streamObject` call — tokens counted server-side.
+    Wrap the Vercel AI SDK and auto-bill every LLM call - tokens counted server-side.
   </Card>
   <Card icon={<Code2 />} title="Pricing DSL">
-    Stop writing if-else spaghetti. Express complex pricing with a type-safe DSL — `mul(add(tag("PREMIUM_CALL"), 50), 2)` — no config files, no spreadsheets.
+    Express complex pricing with a type-safe DSL - no config files, no spreadsheets.
   </Card>
   <Card icon={<Shield />} title="Self-Hosted & Open Source">
     Full control over your billing data. PostgreSQL for events, ClickHouse for telemetry. No vendor lock-in. MIT licensed.
   </Card>
 </Cards>
 
-## The Scrawn Way
-
-**Before Scrawn** — 60+ lines of boilerplate you didn't write (but now have to maintain):
-
-<Callout type="warn">
-You'd need: gRPC client setup, proto type generation, DB client + schema, auth hashing + DB lookup, idempotency (HMAC + Redis), tag resolution or expression evaluation, debit validation, DB transactions, error handling... and that's before you even think about AI token billing.
-</Callout>
-
-**With Scrawn** — one function call:
-
-```typescript
-import { scrawn } from '@scrawn/core';
-
-const biller = scrawn({ apiKey: env.SCRAWN_KEY });
-
-await biller.basicUsageEventConsumer({
-  userId: body.userId,
-  debit: 50,
-});
-```
-
-## How It So Simple, We Don't Even Have to Tell You
-
-<Callout type="success">
-It's literally four lines of code. You've already seen it. Go build.
-</Callout>
-
-| Step | What you do |
-|---|---|
-| **Deploy** | Railway one-click, Docker, or bare metal — the gRPC server + PostgreSQL |
-| **Install** | `bun add @scrawn/core` — one dep, zero config |
-| **Track** | Using our virtually infinite (2 for now) integrations |
-| **Collect** | `biller.collectPayment(userId)` returns a Dodo checkout URL |
-
 ## Use Cases
 
-- **AI/LLM Services** — bill per token per model with automatic Vercel AI SDK integration
-- **API Platforms** — charge per request with tag-based pricing tiers
-- **SaaS Products** — usage-based pricing for any metric
-- **Dev Tools** — metered access to CLI tools or build pipelines
+- **AI/LLM Services** - bill per token per model with automatic Vercel AI SDK integration
+- **API Platforms** - charge per request with tag-based pricing tiers
+- **SaaS Products** - usage-based pricing for any metric
+- **Dev Tools** - metered access to CLI tools or build pipelines
 
 ## Features
 
-- **DodoPayments Native** — we plug into your existing Dodo account; no Stripe migration needed
-- **AI Token Metering** — first-class support for Vercel AI SDK (`streamText`, `generateText`, `streamObject`, `generateObject`)
-- **Pricing DSL** — `mul()`, `add()`, `sub()`, `tag()` — type-safe expressions for any pricing model
-- **Middleware Mode** — intercept requests, extract user IDs and costs, bill automatically
-- **Self-Hosted** — your DB, your data, your infra. Docker compose included.
-- **gRPC Backend** — high-performance, stateless, horizontally scalable
-- **Type-Safe SDK** — full TypeScript types for events, errors, and configuration
-- **Framework Agnostic** — Express, Fastify, Hono, Next.js, tRPC, NestJS — any Node.js HTTP framework
+- **DodoPayments Native** - we plug into your existing Dodo account; no Stripe migration needed
+- **AI Token Metering** - first-class support for Vercel AI SDK (`streamText`, `generateText`, `streamObject`, `generateObject`)
+- **Pricing DSL** - `mul()`, `add()`, `sub()`, `tag()` - type-safe expressions for any pricing model
+- **Middleware Mode** - intercept requests, extract user IDs and costs, bill automatically
+- **Self-Hosted** - your DB, your data, your infra. Docker compose included.
+- **gRPC Backend** - high-performance, stateless, horizontally scalable
+- **Type-Safe SDK** - full TypeScript types for events, errors, and configuration
+- **Framework Agnostic** - Express, Fastify, Hono, Next.js, tRPC, NestJS - any Node.js HTTP framework
 
 
 ## Getting Started
 
 <Cards>
   <Card href="/quick-start" title="Quick Start">
-    Get running in under 5 minutes — clone, configure, deploy, install, bill.
+    Get running in under 5 minutes - clone, configure, deploy, install, bill.
   </Card>
-  <Card href="/sdk-reference" title="SDK Reference">
+  <Card href="/scrawn.js" title="SDK Reference">
     Functions, pricing DSL, production patterns, and framework integration.
   </Card>
-  <Card href="/sdk-reference/functions/usage-tracking" title="Usage Tracking">
+  <Card href="/scrawn.js/functions/usage-tracking" title="Usage Tracking">
     Track billable events manually or drop in the middleware.
   </Card>
 </Cards>
 
 <Callout title="Open Source">
-Scrawn is MIT licensed and available on [GitHub](https://github.com/ScrawnDotDev/Scrawn). Star us, contribute, or fork it — it's yours.
+Scrawn is MIT licensed and available on [GitHub](https://github.com/ScrawnDotDev/Scrawn). Star us, contribute, or fork it - it's yours.
 </Callout>

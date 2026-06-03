@@ -1,0 +1,164 @@
+---
+title: Usage Tracking
+description: Track billable events with basicUsageEventConsumer and middlewareEventConsumer
+---
+
+Events are the core of Scrawn  every API call, AI generation, or billable action produces an event. Track them manually where you need control, or automatically with middleware.
+
+## Manual Tracking
+
+Call `basicUsageEventConsumer` whenever a billable action happens:
+
+Debit a fixed amount (smallest currency unit):
+
+```typescript
+import { biller } from "./scrawn/biller";
+
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: 500,
+});
+```
+
+Use a price tag managed on the backend:
+
+```typescript
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: biller.tag("PREMIUM_CALL"),
+});
+```
+
+Or use a pricing expression - wrap with `biller.expr()`:
+
+```typescript
+import { mul } from "@scrawn/core";
+
+await biller.basicUsageEventConsumer({
+  userId: "user-123",
+  debit: biller.expr(mul(biller.tag("PER_CALL"), 3)),
+});
+```
+
+### Parameters
+
+<TypeTable type={{
+  userId: {
+    description: "User to bill",
+    type: "string",
+    required: true,
+  },
+  debit: {
+    description: "Number (smallest currency unit), a `biller.tag()` reference, or a `biller.expr()` wrapped expression",
+    type: "number | TagExpr | ExprValue",
+    required: true,
+  },
+  metadata: {
+    description: "Arbitrary metadata attached to the event",
+    type: "object",
+  },
+}} />
+
+The `debit` field accepts a number (smallest currency unit), a `biller.tag()` reference (e.g. `biller.tag("PREMIUM_CALL")`), or any pricing expression wrapped in `biller.expr()` (e.g. `biller.expr(mul(biller.tag("RATE"), 3))`). Raw `mul()`, `add()`, etc. must be wrapped in `biller.expr()` to be accepted.
+
+### Options
+
+The second argument accepts an optional options object:
+
+<TypeTable type={{
+  onError: {
+    description: "Callback for non-blocking error handling. `context.retry()` attempts a manual retry",
+    type: "(error, context?) => void",
+  },
+}} />
+
+## Automatic Tracking (Middleware)
+
+`middlewareEventConsumer` drops into any Express-compatible framework and tracks events automatically based on your extractor function.
+
+```typescript
+import { biller } from "./scrawn/biller";
+
+app.use(biller.middlewareEventConsumer({
+  extractor: (req) => ({
+    userId: req.headers["x-user-id"] as string,
+    debit: biller.tag("API_CALL"),
+  }),
+}));
+```
+
+Use whitelist to only track specific paths:
+
+```typescript
+app.use(biller.middlewareEventConsumer({
+  extractor: (req) => ({
+    userId: req.headers["x-user-id"] as string,
+    debit: biller.tag("API_CALL"),
+  }),
+  whitelist: ["/api/**"],
+}));
+```
+
+Use blacklist to exclude specific paths:
+
+```typescript
+app.use(biller.middlewareEventConsumer({
+  extractor: (req) => ({
+    userId: req.headers["x-user-id"] as string,
+    debit: biller.tag("API_CALL"),
+  }),
+  blacklist: ["/api/collect-payment"],
+}));
+```
+
+### Configuration
+
+<TypeTable type={{
+  extractor: {
+    description: "Function that extracts `userId` and `debit` from each request. Return `null` or `undefined` to skip tracking for that request",
+    type: "(req) => EventPayload | null | undefined | Promise<EventPayload | null | undefined>",
+    required: true,
+  },
+  whitelist: {
+    description: "Only track paths matching these glob patterns. `*` matches one segment, `**` matches multiple",
+    type: "string[]",
+  },
+  blacklist: {
+    description: "Exclude paths matching these glob patterns from tracking",
+    type: "string[]",
+  },
+}} />
+
+### Best Practices
+
+**Place after authentication:**
+
+```typescript
+app.use(authMiddleware);
+app.use(biller.middlewareEventConsumer({ /* ... */ }));
+```
+
+**Middleware runs tracking in the background - your handler is not blocked:**
+
+```typescript
+app.post("/api/generate", async (req, res) => {
+  const result = await generateContent(req.body);
+  res.json(result);
+  // Tracking already happened in parallel
+});
+```
+
+### Framework Compatibility
+
+The middleware uses standard `(req, res, next)` signatures. For Fastify, Next.js, or Hono, call `basicUsageEventConsumer` directly in route handlers or [check framework recipes](/scrawn.js/reference-and-guides/framework-recipes) for adapters.
+
+## Next Steps
+
+<Cards>
+  <Card href="/scrawn.js/functions/ai-token-billing" title="AI Token Billing">
+    Meter AI token usage per-call
+  </Card>
+  <Card href="/scrawn.js/functions/collect-payment" title="Collect Payments">
+    Generate a checkout link when it's time to get paid
+  </Card>
+</Cards>

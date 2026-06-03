@@ -1,0 +1,48 @@
+---
+title: Framework Recipes
+description: Framework-specific integration patterns
+---
+
+Most frameworks just need `basicUsageEventConsumer` in a route handler. Express users get the extra benefit of `middlewareEventConsumer` and the webhook adapter.
+
+## Express - Middleware
+
+The `middlewareEventConsumer` drops into Express's `(req, res, next)` signature and tracks events automatically:
+
+```typescript
+import { biller } from "./scrawn/biller";
+
+app.use(biller.middlewareEventConsumer({
+  extractor: (req) => {
+    if (!req.user) return null;
+    return {
+      userId: req.user.id,
+      debit: biller.tag("API_CALL"),
+    };
+  },
+  blacklist: ["/health", "/api/collect-payment"],
+}));
+```
+
+See the [middleware section](/scrawn.js/functions/usage-tracking#automatic-tracking-middleware) for configuration options.
+
+## Express - Webhooks
+
+Use `toWebRequest()` to convert Express's `IncomingMessage` to the `fetch`-compatible `Request` that `biller.webhook()` expects:
+
+```typescript
+import { toWebRequest } from "@scrawn/core";
+import { biller } from "./scrawn/biller";
+
+app.post("/webhooks/scrawn", async (req, res) => {
+  const rawBody = JSON.stringify(req.body);
+  const event = await biller.webhook(toWebRequest(req, rawBody));
+  res.status(200).send("OK");
+});
+```
+
+## Other frameworks (Next.js, NestJS, tRPC, Fastify, Hono)
+
+The SDK works with any Node.js HTTP framework - call `basicUsageEventConsumer` directly in your route handlers.
+
+See the [usage tracking guide](/scrawn.js/functions/usage-tracking) for the full API, [error handling guide](/scrawn.js/reference-and-guides/error-handling) for error recovery patterns, and [webhook verification](/scrawn.js/functions/webhook) for inbound webhook handling.

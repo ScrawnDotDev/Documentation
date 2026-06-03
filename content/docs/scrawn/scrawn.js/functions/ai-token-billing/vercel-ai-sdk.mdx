@@ -1,0 +1,172 @@
+---
+title: Vercel AI SDK
+description: First-class Vercel AI SDK integration - auto-bill every LLM call
+---
+
+# Vercel AI SDK
+
+Scrawn wraps the Vercel AI SDK so every `streamText`, `generateText`, `streamObject`, and `generateObject` call auto-bills on every step finish. No manual token counting, no per-route instrumentation.
+
+## Setup
+
+Add the AI wrapper to your `biller.ts`:
+
+```typescript
+// scrawn/biller.ts
+import { scrawn } from "@scrawn/core";
+import { TAGS, EXPRESSIONS } from "./pricerefs";
+import * as aisdk from "ai"; // [!code ++]
+
+export const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  httpUrl: process.env.SCRAWN_HTTP_URL,
+  tags: TAGS,
+  expressions: EXPRESSIONS,
+});
+
+export const ai = biller.ai(aisdk, { // [!code ++]
+  inputDebit: biller.tag("GPT_INPUT"), // [!code ++]
+  outputDebit: biller.expr("COMPLEX_FEE"), // [!code ++]
+}); // [!code ++]
+```
+
+Then import `ai` from your biller in any file:
+
+```typescript
+import { ai } from "./scrawn/biller";
+
+const result = await ai.streamText({
+  userId: "user-123",
+  model: openai("gpt-4o-mini"),
+  prompt: "Hello",
+});
+```
+
+The config object accepts:
+
+<TypeTable type={{
+  inputDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for input tokens - number, `biller.tag()`, or `biller.expr()` expression",
+    required: true,
+  },
+  outputDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for output tokens",
+    required: true,
+  },
+  inputCacheDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for cached input tokens",
+  },
+  outputCacheDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for cached output tokens",
+  },
+}} />
+
+<Callout type="info">
+The returned `ai` object works **exactly** like the original Vercel AI SDK - call `streamText`, `generateText`, etc. exactly as you normally would, just with a `userId` parameter added.
+</Callout>
+
+## Usage
+
+Every wrapped function works exactly like the original Vercel AI SDK - just add a `userId` to associate billing:
+
+```typescript
+import { ai } from "./scrawn/biller";
+
+const result = await ai.streamText({
+  userId: "user-123",
+  model: openai("gpt-4o-mini"),
+  prompt: "Hello",
+});
+```
+
+The same pattern applies to `generateText`, `streamObject`, and `generateObject` - all original options and types are preserved.
+
+### Multiple models
+
+Use tags to charge different rates per model. Define separate wrappers in your `biller.ts`:
+
+```typescript
+// scrawn/biller.ts
+export const gpt = biller.ai(aisdk, {
+  inputDebit: biller.tag("GPT_INPUT"),
+  outputDebit: biller.tag("GPT_OUTPUT"),
+});
+
+export const claude = biller.ai(aisdk, {
+  inputDebit: biller.tag("CLAUDE_INPUT"),
+  outputDebit: biller.tag("CLAUDE_OUTPUT"),
+});
+```
+
+Then import the right one per call:
+
+```typescript
+import { gpt, claude } from "./scrawn/biller";
+
+const result = await gpt.streamText({
+  userId: "user-123",
+  model: openai("gpt-4o-mini"),
+  prompt: "Hello",
+});
+```
+
+## Manual tracking (trackAI)
+
+For full manual control without the `biller.ai()` wrapper, use `trackAI()` inside `onFinish` or `onStepFinish`:
+
+```typescript
+import { biller } from "./scrawn/biller";
+
+ai.streamText({
+  model: openai("gpt-4o"),
+  prompt: "Hello",
+  onFinish: async (event) => {
+    biller.trackAI({
+      userId: "user-123",
+      event,
+      inputDebit: biller.tag("GPT_INPUT"),
+      outputDebit: biller.tag("GPT_OUTPUT"),
+    });
+  },
+});
+```
+
+<TypeTable type={{
+  userId: {
+    type: "string",
+    description: "User to bill",
+    required: true,
+  },
+  event: {
+    type: "object",
+    description: "The `onFinish` or `onStepFinish` event from the Vercel AI SDK",
+    required: true,
+  },
+  inputDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for input tokens",
+    required: true,
+  },
+  outputDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for output tokens",
+    required: true,
+  },
+  inputCacheDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for cached input tokens",
+  },
+  outputCacheDebit: {
+    type: "number | TagExpr | ExprValue",
+    description: "Pricing for cached output tokens",
+  },
+}} />
+
+## Compatibility
+
+The wrapper supports `ai` SDK versions 3.x and 4.x. If you encounter type issues, ensure `ai` and `@scrawn/core` are both on recent versions.

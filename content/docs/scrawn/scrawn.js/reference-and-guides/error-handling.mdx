@@ -1,0 +1,155 @@
+---
+title: Error Handling & Retries
+description: Scrawn error classes, retry behavior, and error recovery patterns
+---
+
+Scrawn provides typed error classes for every failure mode. The SDK automatically retries transient errors - you can configure the retry count and handle permanent failures in your code.
+
+## Error classes
+
+All errors extend `ScrawnError` and include `code`, `retryable`, `statusCode`, and `requestId` fields.
+
+<TypeTable type={{
+  ScrawnError: {
+    type: "class",
+    description: "Base error. Use `isScrawnError()` to check if an error is from Scrawn",
+  },
+  ScrawnValidationError: {
+    type: "class",
+    description: "Invalid input - wrong types, missing fields, etc. Not retryable",
+  },
+  ScrawnAuthenticationError: {
+    type: "class",
+    description: "Invalid or missing API key. Not retryable",
+  },
+  ScrawnRateLimitError: {
+    type: "class",
+    description: "Too many requests. Retryable - includes `retryAfter` field with suggested wait time",
+  },
+  ScrawnNetworkError: {
+    type: "class",
+    description: "Network failure - connection refused, DNS error, timeout. Retryable",
+  },
+  ScrawnAPIError: {
+    type: "class",
+    description: "Server returned an unexpected error. May or may not be retryable",
+  },
+  ScrawnConfigError: {
+    type: "class",
+    description: "SDK configuration error - missing `apiKey`, invalid `baseURL`, etc. Not retryable",
+  },
+  PricingExpressionError: {
+    type: "class",
+    description: "Invalid pricing expression - wrong types, missing operands, etc. Caught at compile time by TypeScript",
+  },
+  WebhookVerificationError: {
+    type: "class",
+    description: "Webhook signature verification failed - invalid signature, expired timestamp, or missing headers",
+  },
+}} />
+
+## Retry behavior
+
+The SDK retries automatically on transient errors (network failures, rate limits). Configure with `retryCount`:
+
+```typescript
+const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  httpUrl: process.env.SCRAWN_HTTP_URL,
+  retryCount: 3, // default: 2, set to 0 to disable
+});
+```
+
+Retries use exponential backoff: 1s → 2s → 4s → 8s (capped at 8s). Only retryable errors (network errors, rate limits) trigger a retry - validation and auth errors fail immediately.
+
+## Handling errors in callbacks
+
+Pass an `onError` callback to handle failures without crashing:
+
+```typescript
+await biller.basicUsageEventConsumer(
+  {
+    userId: "user-123",
+    debit: 250,
+  },
+  {
+    onError: (error, context) => {
+      console.error("Tracking failed:", error.message);
+      // error.retryable - true if it can be retried
+      // error.code - error type identifier
+    },
+  }
+);
+```
+
+The error callback receives a `RetryContext` with a `retry()` method for manual retry. The context also exposes `retryCount` - check it to avoid infinite loops:
+
+```typescript
+onError: async (error, context) => {
+  if (context && error.retryable && context.retryCount < 3) {
+    console.log(`Retry attempt ${context.retryCount + 1}`);
+    await context.retry();
+  } else {
+    console.error("Giving up after", context?.retryCount ?? 0, "retries");
+  }
+}
+```
+
+The built-in auto-retry (`retryCount` in the constructor) and manual `context.retry()` are independent - manual retries don't count toward the auto-retry limit. Always guard manual retries with a cap on `context.retryCount` to prevent infinite loops.
+
+## Type guards
+
+<TypeTable type={{
+  isScrawnError: {
+    type: "(error: unknown) => boolean",
+    description: "Type guard - checks if an error is a ScrawnError instance",
+  },
+  isRetryableError: {
+    type: "(error: unknown) => boolean",
+    description: "Type guard - checks if an error can be retried",
+  },
+}} />
+
+## Pricing expression errors
+
+Invalid expressions throw `PricingExpressionError` at runtime. The TypeScript types catch most mistakes at compile time.
+
+```typescript
+try {
+  const expr = mul(biller.tag("UNKNOWN_TAG"), 3);
+  await biller.basicUsageEventConsumer({ userId: "u1", debit: biller.expr(expr) });
+} catch (error) {
+  if (error instanceof PricingExpressionError) {
+    console.error("Invalid expression:", error.message);
+  }
+}
+```
+
+The SDK also provides `isValidExpr()` to check expressions before using them:
+
+```typescript
+import { isValidExpr, mul } from "@scrawn/core";
+
+const expr = mul(biller.tag("RATE"), 3);
+if (isValidExpr(expr)) {
+  // safe to use
+}
+```
+
+## Webhook verification errors
+
+`biller.webhook()` throws `WebhookVerificationError` when signature verification fails:
+
+```typescript
+import { WebhookVerificationError } from "@scrawn/core";
+
+try {
+  const event = await biller.webhook(request);
+} catch (error) {
+  if (error instanceof WebhookVerificationError) {
+    // Invalid signature, expired timestamp, or missing headers
+    res.status(400).send("Invalid webhook");
+  }
+}
+```

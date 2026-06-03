@@ -1,0 +1,102 @@
+---
+title: Overview
+description: SDK reference for Scrawn  functions, pricing DSL, and production patterns
+---
+
+Everything you need to integrate Scrawn into your application.
+
+## Configuration
+
+`scrawn()` is the factory that creates your billing instance:
+
+```typescript
+// scrawn/biller.ts
+import { scrawn } from "@scrawn/core";
+import { TAGS, EXPRESSIONS } from "./pricerefs";
+
+export const biller = scrawn({
+  apiKey: process.env.SCRAWN_KEY,
+  baseURL: process.env.SCRAWN_BASE_URL,
+  httpUrl: process.env.SCRAWN_HTTP_URL,
+  tags: TAGS,
+  expressions: EXPRESSIONS,
+});
+```
+
+The factory accepts a single config object:
+
+<TypeTable type={{
+  apiKey: {
+    description: "Your Scrawn API key (starts with `scrn_`)",
+    type: "string",
+    required: true,
+  },
+  baseURL: {
+    description: "Base URL of your Scrawn backend (e.g. `http://localhost:8069`)",
+    type: "string",
+    required: true,
+  },
+  httpUrl: {
+    description: "HTTP URL of your Scrawn backend (e.g. `http://localhost:8070`)",
+    type: "string",
+    required: true,
+  },
+  secure: {
+    description: "Whether to use TLS for gRPC. Set to `false` for local dev",
+    type: "boolean",
+    default: "true",
+  },
+  tags: {
+    description: "Known tag names from `scrawn tag sync` for compile-time type checking on `biller.tag()`",
+    type: "readonly string[]",
+  },
+  expressions: {
+    description: "Known expression names from `scrawn tag sync` for compile-time type checking on `biller.expr()`",
+    type: "readonly string[]",
+  },
+  retryCount: {
+    description: "Auto-retry attempts on transient network errors. Set to `0` to disable",
+    type: "number",
+    default: "2",
+  },
+  webhookPublicKey: {
+    description: "Optional webhook public key (`whpk_...`). Set to skip the backend fetch on `biller.webhook()` cold starts",
+    type: "string",
+  },
+  credentials: {
+    description: "Custom gRPC channel credentials for TLS. Only needed if you use custom certificates",
+    type: "ChannelCredentials",
+  },
+}} />
+
+## Functions
+
+The core methods you call in your code to track usage, bill AI tokens, and collect payments.
+
+<Cards>
+  <Card href="/scrawn.js/functions/usage-tracking" title="Usage Tracking">
+    Track billable events manually or automatically with middleware.
+  </Card>
+  <Card href="/scrawn.js/functions/ai-token-billing" title="AI Token Billing">
+    Meter AI token usage per-call with streaming, the AI SDK wrapper, or manual tracking.
+  </Card>
+  <Card href="/scrawn.js/functions/collect-payment" title="Collect Payments">
+    Generate a checkout link when a user's balance crosses your threshold.
+  </Card>
+  <Card href="/scrawn.js/functions/webhook" title="Webhook Verification">
+    Verify incoming webhooks - fetches the public key, verifies the signature, returns the typed event.
+  </Card>
+</Cards>
+
+## Reference & Guides
+
+Pricing expressions, production patterns, and framework integration.
+
+<Cards>
+  <Card href="/scrawn.js/reference-and-guides/pricing-dsl" title="Pricing DSL">
+    Type-safe expressions for pricing logic - mul, add, tag, inputTokens, and more.
+  </Card>
+  <Card href="/scrawn.js/reference-and-guides/framework-recipes" title="Framework Recipes">
+    Quick integration patterns for Express, Next.js, Fastify, NestJS, tRPC, Hono, and Nuxt.
+  </Card>
+</Cards>

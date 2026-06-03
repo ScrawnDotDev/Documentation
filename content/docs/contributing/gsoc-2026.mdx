@@ -53,7 +53,7 @@ The SDK currently uses gRPC with HTTP/2 for persistent connections. This project
 - **Stream Recovery**: If the SDK-to-backend connection drops mid-stream, the SDK reconnects with the stream ID to resume
 - **Backend Failover**: If a backend instance crashes during processing, another instance picks up using the stream ID from Kafka
 - **Response Queueing**: Completed stream responses are temporarily stored in a queue with stream IDs. If the SDK reconnects within the timeout window, it retrieves the response; otherwise, entries expire
-- **Developer Experience**: The complexity is abstracted inside the SDK—developers just call a function and get back a response, with all the webhook-style async handling hidden
+- **Developer Experience**: The complexity is abstracted inside the SDK-developers just call a function and get back a response, with all the webhook-style async handling hidden
 
 **Skills Required**:
 - TypeScript
@@ -187,7 +187,7 @@ Build a GraphQL gateway that wraps the gRPC backend services, providing a unifie
 
 **Description**: Build an interactive playground on the documentation site that demonstrates how easy it is to integrate the Scrawn SDK with real-time code editing and execution simulation.
 
-Create a fully interactive, browser-based environment where developers can experiment with SDK integration patterns without setting up a local environment. The playground simulates the entire SDK workflow—from initialization to event tracking to payment collection—with live code editing, syntax highlighting, and visual feedback. Users can see how the SDK works in different frameworks (Express, Next.js, tRPC) with instant visual results showing API calls, event queues, and backend responses.
+Create a fully interactive, browser-based environment where developers can experiment with SDK integration patterns without setting up a local environment. The playground simulates the entire SDK workflow-from initialization to event tracking to payment collection-with live code editing, syntax highlighting, and visual feedback. Users can see how the SDK works in different frameworks (Express, Next.js, tRPC) with instant visual results showing API calls, event queues, and backend responses.
 
 **Key Features**:
 - **Live Code Editor**: Monaco Editor with TypeScript support and autocomplete

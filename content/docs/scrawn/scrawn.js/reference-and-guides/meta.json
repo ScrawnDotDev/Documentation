@@ -2,6 +2,7 @@
   "title": "Reference & Guides",
   "pages": [
     "pricing-dsl",
-    "framework-recipes"
+    "framework-recipes",
+    "error-handling"
   ]
 }
