@@ -8,13 +8,14 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://docs.scrawn.dev"),
   title: {
     template: "%s | Scrawn",
-    default: "Scrawn | The End-to-end billing infrastructure for builders",
+    default: "Scrawn | Usage-based billing infrastructure for developers",
   },
   description:
-    "Track usage, manage API keys, process payments. Stop wrestling with payment gateway webhooks and start shipping features.",
+    "Scrawn is the open-source usage-based billing engine for developers who need to charge for API calls, AI tokens, and compute. One SDK call tracks usage, evaluates pricing, and collects payment.",
   openGraph: {
-    title: "Scrawn | The End-to-end billing infrastructure for builders",
-    description: "Track usage, manage API keys, process payments. Stop wrestling with payment gateway webhooks and start shipping features.",
+    title: "Scrawn | Usage-based billing infrastructure for developers",
+    description:
+      "Open-source usage-based billing. Track API calls, AI tokens, compute - one SDK call evaluates pricing and collects payment.",
     url: "https://docs.scrawn.dev",
     siteName: "Scrawn Docs",
     locale: "en_US",
@@ -22,14 +23,56 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Scrawn | The End-to-end billing infrastructure for builders",
-    description: "Track usage, manage API keys, process payments. Stop wrestling with payment gateway webhooks and start shipping features.",
+    title: "Scrawn | Usage-based billing infrastructure for developers",
+    description:
+      "Open-source usage-based billing. Track API calls, AI tokens, compute - one SDK call evaluates pricing and collects payment.",
   },
+  keywords: [
+    "usage based billing",
+    "open source billing",
+    "scrawn billing",
+    "AI token billing",
+    "developer billing API",
+    "usage metering",
+    "pay per use infrastructure",
+  ],
 };
 
 export default function Layout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Scrawn",
+              url: "https://docs.scrawn.dev",
+              logo: "https://docs.scrawn.dev/Scrawn_Logo.png",
+              description:
+                "Open-source usage-based billing infrastructure for developers.",
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Scrawn Docs",
+              url: "https://docs.scrawn.dev",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://docs.scrawn.dev/?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
+      </head>
       <link
         rel="apple-touch-icon"
         sizes="180x180"

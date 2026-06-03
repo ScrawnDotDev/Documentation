@@ -17,9 +17,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: url('/landing'),
+      url: url('/'),
       lastModified: new Date(),
-      changeFrequency: 'monthly',
+      changeFrequency: 'weekly',
       priority: 1,
     },
     ...pages,

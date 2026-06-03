@@ -56,14 +56,34 @@ export async function generateMetadata(
   const page = source.getPage(slug);
   if (!page) notFound();
 
+  const title = page.data.title;
+  const description = page.data.description;
+  const canonical = `https://docs.scrawn.dev${page.url}`;
+
   return {
-    title: page.data.title,
-    description: page.data.description,
-    alternates: {
-      canonical: `https://docs.scrawn.dev${page.url}`,
-    },
+    title,
+    description,
+    alternates: { canonical },
     openGraph: {
+      title,
+      description,
+      url: canonical,
       images: getPageImage(page).url,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+    other: {
+      'application/ld+json': JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Docs", item: "https://docs.scrawn.dev" },
+          { "@type": "ListItem", position: 2, name: title, item: canonical },
+        ],
+      }),
     },
   };
 }
