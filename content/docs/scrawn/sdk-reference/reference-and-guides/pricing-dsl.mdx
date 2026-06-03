@@ -20,7 +20,7 @@ tag("EXTRA_FEE");
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `name` | `string` | Yes | — | The tag name registered on the backend |
+| `name` | `string` | Yes |  | The tag name registered on the backend |
 
 ### `amount(cents)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
@@ -34,7 +34,7 @@ amount(500);  // $5.00
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `cents` | `number` | Yes | — | Amount in cents |
+| `cents` | `number` | Yes |  | Amount in cents |
 
 ### `mul(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
@@ -49,7 +49,7 @@ mul(tag("BASE_RATE"), 2, tag("MULTIPLIER"));
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `...args` | `PriceExpr[]` | Yes | — | Two or more values to multiply |
+| `...args` | `PriceExpr[]` | Yes |  | Two or more values to multiply |
 
 ### `add(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
@@ -64,7 +64,7 @@ add(tag("BASE"), 250, amount(100));
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `...args` | `PriceExpr[]` | Yes | — | Two or more values to add |
+| `...args` | `PriceExpr[]` | Yes |  | Two or more values to add |
 
 ### `sub(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
@@ -78,7 +78,7 @@ sub(tag("GROSS"), tag("DISCOUNT"));
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `...args` | `PriceExpr[]` | Yes | — | Two or more values to subtract |
+| `...args` | `PriceExpr[]` | Yes |  | Two or more values to subtract |
 
 ### `div(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
@@ -92,7 +92,7 @@ div(tag("TOTAL"), 2);
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `...args` | `PriceExpr[]` | Yes | — | Two or more values to divide (integer division) |
+| `...args` | `PriceExpr[]` | Yes |  | Two or more values to divide (integer division) |
 
 ### `inputTokens()` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">AI only</span>
 ### `outputTokens()` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">AI only</span>

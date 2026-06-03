@@ -3,7 +3,7 @@ title: Usage Tracking
 description: Track billable events with basicUsageEventConsumer and middlewareEventConsumer
 ---
 
-Events are the core of Scrawn — every API call, AI generation, or billable action produces an event. Track them manually where you need control, or automatically with middleware.
+Events are the core of Scrawn  every API call, AI generation, or billable action produces an event. Track them manually where you need control, or automatically with middleware.
 
 ## Manual Tracking
 
@@ -40,8 +40,8 @@ await biller.basicUsageEventConsumer({
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `userId` | `string` | Yes | — | User to bill |
-| `debit` | `number \| PriceExpr` | Yes | — | Cents or pricing expression |
+| `userId` | `string` | Yes |  | User to bill |
+| `debit` | `number \| PriceExpr` | Yes |  | Cents or pricing expression |
 | `metadata` | `object` | No | `undefined` | Arbitrary metadata |
 
 The `debit` field accepts a number (cents), a `tag()` reference, a pricing expression like `mul(tag(...), n)`, or a `biller.expr()` reference.
@@ -78,9 +78,9 @@ app.use(biller.middlewareEventConsumer({
 
 | Option | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `extractor` | `(req) => { userId, debit } \| null \| Promise<...>` | Yes | — | Extracts `userId` and `debit` from each request. Return `null` to skip tracking |
-| `whitelist` | `string[]` | No | — | Only track specific endpoint patterns. `*` matches one segment, `**` matches multiple |
-| `blacklist` | `string[]` | No | — | Exclude specific endpoints from tracking |
+| `extractor` | `(req) => { userId, debit } \| null \| Promise<...>` | Yes |  | Extracts `userId` and `debit` from each request. Return `null` to skip tracking |
+| `whitelist` | `string[]` | No |  | Only track specific endpoint patterns. `*` matches one segment, `**` matches multiple |
+| `blacklist` | `string[]` | No |  | Exclude specific endpoints from tracking |
 
 ### Best Practices
 
@@ -97,7 +97,7 @@ app.use(biller.middlewareEventConsumer({ /* ... */ }));
 blacklist: ["/api/collect-payment"]
 ```
 
-**Middleware runs tracking in the background — your handler is not blocked:**
+**Middleware runs tracking in the background  your handler is not blocked:**
 
 ```typescript
 app.post("/api/generate", async (req, res) => {

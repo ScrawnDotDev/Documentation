@@ -1,6 +1,6 @@
 ---
 title: Vercel AI SDK
-description: First-class Vercel AI SDK integration — auto-bill every LLM call
+description: First-class Vercel AI SDK integration  auto-bill every LLM call
 ---
 
 # Vercel AI SDK <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">First class</span>
@@ -30,16 +30,16 @@ The config object accepts:
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `inputDebit` | `Debit` | Yes | — | Pricing for input tokens — number, `biller.tag()`, or expression using `mul()`, `inputTokens()`, etc. |
-| `outputDebit` | `Debit` | Yes | — | Pricing for output tokens |
-| `inputCacheDebit` | `Debit` | No | — | Pricing for cached input tokens |
-| `outputCacheDebit` | `Debit` | No | — | Pricing for cached output tokens |
+| `inputDebit` | `Debit` | Yes |  | Pricing for input tokens  number, `biller.tag()`, or expression using `mul()`, `inputTokens()`, etc. |
+| `outputDebit` | `Debit` | Yes |  | Pricing for output tokens |
+| `inputCacheDebit` | `Debit` | No |  | Pricing for cached input tokens |
+| `outputCacheDebit` | `Debit` | No |  | Pricing for cached output tokens |
 
-The returned `aii` object has the same API as the Vercel AI SDK — call `streamText`, `generateText`, etc. exactly as you normally would, just with a `userId` parameter added.
+The returned `aii` object has the same API as the Vercel AI SDK  call `streamText`, `generateText`, etc. exactly as you normally would, just with a `userId` parameter added.
 
 ## Usage
 
-Every wrapped function works exactly like the original Vercel AI SDK — just add a `userId` to associate billing:
+Every wrapped function works exactly like the original Vercel AI SDK  just add a `userId` to associate billing:
 
 ```typescript
 const result = await aii.streamText({
@@ -49,7 +49,7 @@ const result = await aii.streamText({
 });
 ```
 
-The same pattern applies to `generateText`, `streamObject`, and `generateObject` — all original options and types are preserved.
+The same pattern applies to `generateText`, `streamObject`, and `generateObject`  all original options and types are preserved.
 
 ## Per-Model Pricing
 
@@ -99,12 +99,12 @@ ai.streamText({
 
 | Param | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `userId` | `string` | Yes | — | User to bill |
-| `event` | `object` | Yes | — | The `onFinish` or `onStepFinish` event from the Vercel AI SDK |
-| `inputDebit` | `Debit` | Yes | — | Pricing for input tokens |
-| `outputDebit` | `Debit` | Yes | — | Pricing for output tokens |
-| `inputCacheDebit` | `Debit` | No | — | Pricing for cached input tokens |
-| `outputCacheDebit` | `Debit` | No | — | Pricing for cached output tokens |
+| `userId` | `string` | Yes |  | User to bill |
+| `event` | `object` | Yes |  | The `onFinish` or `onStepFinish` event from the Vercel AI SDK |
+| `inputDebit` | `Debit` | Yes |  | Pricing for input tokens |
+| `outputDebit` | `Debit` | Yes |  | Pricing for output tokens |
+| `inputCacheDebit` | `Debit` | No |  | Pricing for cached input tokens |
+| `outputCacheDebit` | `Debit` | No |  | Pricing for cached output tokens |
 
 ## Compatibility
 
