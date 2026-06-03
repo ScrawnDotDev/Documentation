@@ -63,21 +63,29 @@ const result = await response;
 
 ## AITokenUsagePayload
 
+`aiTokenStreamConsumer()` accepts an optional options object:
+
+| Option | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `return` | `boolean` | No | `false` | When `true`, returns a forked stream so you can simultaneously bill and stream tokens to the user |
+
+### AITokenUsagePayload
+
 Each payload in the stream represents a single token usage event:
 
-| Field | Type | Description |
-|---|---|---|
-| `userId` | `string` | User to bill |
-| `model` | `string` | Model identifier (e.g. `"gpt-4"`) |
-| `inputTokens` | `number` | Input token count |
-| `outputTokens` | `number` | Output token count |
-| `inputDebit` | `Debit` | Pricing for input tokens — number, tag, or expression |
-| `outputDebit` | `Debit` | Pricing for output tokens |
-| `provider` | `string` | (optional) LLM provider |
-| `inputCacheTokens` | `number` | (optional) Cached input tokens |
-| `inputCacheDebit` | `Debit` | (optional) Pricing for cached input |
-| `outputCacheTokens` | `number` | (optional) Cached output tokens |
-| `outputCacheDebit` | `Debit` | (optional) Pricing for cached output |
-| `metadata` | `object` | (optional) Arbitrary metadata |
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `userId` | `string` | Yes | — | User to bill |
+| `model` | `string` | Yes | — | Model identifier (e.g. `"gpt-4"`) |
+| `inputTokens` | `number` | Yes | — | Input token count |
+| `outputTokens` | `number` | Yes | — | Output token count |
+| `inputDebit` | `Debit` | Yes | — | Pricing for input tokens — number, tag, or expression |
+| `outputDebit` | `Debit` | Yes | — | Pricing for output tokens |
+| `provider` | `string` | No | — | LLM provider |
+| `inputCacheTokens` | `number` | No | — | Cached input tokens |
+| `inputCacheDebit` | `Debit` | No | — | Pricing for cached input |
+| `outputCacheTokens` | `number` | No | — | Cached output tokens |
+| `outputCacheDebit` | `Debit` | No | — | Pricing for cached output |
+| `metadata` | `object` | No | — | Arbitrary metadata |
 
 The `Debit` type accepts a number (cents), a `biller.tag()` reference, or a pricing expression using `mul()`, `add()`, `inputTokens()`, etc.

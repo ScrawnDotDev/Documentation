@@ -30,86 +30,16 @@ res.redirect(checkoutLink);
 
 ## Parameters
 
-### `userId` (required)
-- **Type:** `string`
-- **Description:** The unique identifier of the user to collect payment from
-- **Validation:** Must be a non-empty string
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `userId` | `string` | Yes | — | The unique identifier of the user to collect payment from |
 
 ## Response
 
-- **Type:** `Promise<string>`
-- **Returns:** A checkout URL where the user can complete their payment
+| Type | Description |
+|---|---|
+| `Promise<string>` | A checkout URL where the user can complete their payment |
 
-## Examples
-
-### Express.js Endpoint
-
-```typescript
-import express from "express";
-import { scrawn } from "@scrawn/core";
-
-const app = express();
-app.use(express.json());
-
-const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: process.env.SCRAWN_BASE_URL || "http://localhost:8069",
-});
-
-app.post("/api/collect-payment", async (req, res) => {
-  try {
-    const { userId } = req.body;
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-    const checkoutLink = await biller.collectPayment(userId);
-    res.redirect(checkoutLink);
-  } catch (error) {
-    console.error("Failed to collect payment:", error);
-    res.status(500).json({ error: "Failed to create checkout link" });
-  }
-});
-```
-
-## Error Handling
-
-```typescript
-try {
-  const checkoutLink = await biller.collectPayment(userId);
-  console.log("Checkout link created:", checkoutLink);
-} catch (error) {
-  console.error('Error creating checkout link:', error);
-  // Handle error appropriately
-}
-```
-
-## Best Practices
-
-### 1. Validate User ID
-
-Always validate the user ID before generating a checkout link:
-
-```typescript
-if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-  return res.status(400).json({ error: 'Valid userId is required' });
-}
-
-  const checkoutLink = await biller.collectPayment(userId);
-```
-
-### 2. Exclude from Tracking
-
-Make sure to exclude the payment endpoint from usage tracking middleware:
-
-```typescript
-app.use(biller.middlewareEventConsumer({
-  extractor: (req) => ({
-    userId: req.user.id,
-    debit: 10,
-  }),
-  blacklist: ['/api/collect-payment'], // Don't charge for payment collection
-}));
-```
 
 ## Next Steps
 

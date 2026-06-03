@@ -173,10 +173,10 @@ const result = await aii.streamText({
 
 ### biller.trackAI()
 
-Manually track AI token usage from an `onFinish` callback:
+Manually track AI token usage from an `onFinish` or `onStepFinish` callback:
 
 ```typescript
-await biller.trackAI(userId, model, usage, overrides, defaults);
+await biller.trackAI({ userId, event, inputDebit, outputDebit, inputCacheDebit, outputCacheDebit });
 ```
 
 ### collectPayment

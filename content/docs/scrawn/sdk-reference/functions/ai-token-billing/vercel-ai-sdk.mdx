@@ -26,6 +26,15 @@ const aii = biller.ai(ai, {
 });
 ```
 
+The config object accepts:
+
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `inputDebit` | `Debit` | Yes | — | Pricing for input tokens — number, `biller.tag()`, or expression using `mul()`, `inputTokens()`, etc. |
+| `outputDebit` | `Debit` | Yes | — | Pricing for output tokens |
+| `inputCacheDebit` | `Debit` | No | — | Pricing for cached input tokens |
+| `outputCacheDebit` | `Debit` | No | — | Pricing for cached output tokens |
+
 The returned `aii` object has the same API as the Vercel AI SDK — call `streamText`, `generateText`, etc. exactly as you normally would, just with a `userId` parameter added.
 
 ## Usage
@@ -74,28 +83,28 @@ ai.streamText({
   model: openai("gpt-4o"),
   prompt: "Hello",
   onFinish: async (event) => {
-    await biller.trackAI(
-      "user-123",
-      event.model,
-      {
-        inputTokens: event.usage.inputTokens ?? 0,
-        outputTokens: event.usage.outputTokens ?? 0,
-        totalTokens: event.usage.totalTokens ?? 0,
-      },
-      {
-        inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
-        outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
-      },
-      {
-        inputDebit: 3,
-        outputDebit: 6,
-        inputCacheDebit: 3,
-        outputCacheDebit: 6,
-      }
-    );
+    biller.trackAI({
+      userId: "user-123",
+      event,
+      inputDebit: mul(biller.tag("GPT_INPUT"), inputTokens()),
+      outputDebit: mul(biller.tag("GPT_OUTPUT"), outputTokens()),
+      inputCacheDebit: 3,
+      outputCacheDebit: 6,
+    });
   },
 });
 ```
+
+### Parameters
+
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `userId` | `string` | Yes | — | User to bill |
+| `event` | `object` | Yes | — | The `onFinish` or `onStepFinish` event from the Vercel AI SDK |
+| `inputDebit` | `Debit` | Yes | — | Pricing for input tokens |
+| `outputDebit` | `Debit` | Yes | — | Pricing for output tokens |
+| `inputCacheDebit` | `Debit` | No | — | Pricing for cached input tokens |
+| `outputCacheDebit` | `Debit` | No | — | Pricing for cached output tokens |
 
 ## Compatibility
 

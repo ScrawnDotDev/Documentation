@@ -18,6 +18,10 @@ tag("PREMIUM_CALL");   // Resolved to cent amount by backend
 tag("EXTRA_FEE");
 ```
 
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `name` | `string` | Yes | — | The tag name registered on the backend |
+
 ### `amount(cents)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
 Explicit cent amount as an expression node (useful inside compound expressions).
@@ -27,6 +31,10 @@ import { amount } from "@scrawn/core";
 
 amount(500);  // $5.00
 ```
+
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `cents` | `number` | Yes | — | Amount in cents |
 
 ### `mul(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
@@ -39,6 +47,10 @@ mul(tag("PER_TOKEN"), 100);
 mul(tag("BASE_RATE"), 2, tag("MULTIPLIER"));
 ```
 
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `...args` | `PriceExpr[]` | Yes | — | Two or more values to multiply |
+
 ### `add(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
 Add two or more values.
@@ -50,6 +62,10 @@ add(tag("PREMIUM_CALL"), tag("EXTRA_FEE"));
 add(tag("BASE"), 250, amount(100));
 ```
 
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `...args` | `PriceExpr[]` | Yes | — | Two or more values to add |
+
 ### `sub(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
 Subtract values.
@@ -59,6 +75,10 @@ import { sub, tag } from "@scrawn/core";
 
 sub(tag("GROSS"), tag("DISCOUNT"));
 ```
+
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `...args` | `PriceExpr[]` | Yes | — | Two or more values to subtract |
 
 ### `div(...args)` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">Events & AI</span>
 
@@ -70,10 +90,16 @@ import { div, tag } from "@scrawn/core";
 div(tag("TOTAL"), 2);
 ```
 
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `...args` | `PriceExpr[]` | Yes | — | Two or more values to divide (integer division) |
+
 ### `inputTokens()` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">AI only</span>
 ### `outputTokens()` <span className="inline-flex items-center rounded-sm border border-yellow-400 bg-yellow-400 px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-widest text-black">AI only</span>
 
 Token count placeholders that resolve to the actual token count of the current AI call. Only valid inside `AITokenUsagePayload` objects.
+
+No parameters. Returns a `PriceExpr` that resolves to the token count at billing time.
 
 ```typescript
 import { mul, tag, inputTokens, outputTokens } from "@scrawn/core";

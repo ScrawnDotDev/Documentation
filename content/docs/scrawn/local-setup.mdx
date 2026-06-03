@@ -5,230 +5,49 @@ description: Run your Scrawn backend locally for development
 
 This guide covers running Scrawn backend locally for development and deploying it to production.
 
-## Running Locally
+## CLI Setup
 
-Perfect for development and testing before deploying to production.
+The Scrawn CLI automates the entire local development stack — PostgreSQL, ClickHouse, server, and dashboard — with a few commands.
 
-### Start the Server
+### Initialize the Stack
 
-<Tabs items={['bun', 'npm', 'yarn']}>
-  <Tab value="bun">
-    ```bash
-    bun run dev:backend
-    ```
-  </Tab>
-  <Tab value="npm">
-    ```bash
-    npm run dev:backend
-    ```
-  </Tab>
-  <Tab value="yarn">
-    ```bash
-    yarn dev:backend
-    ```
-  </Tab>
-</Tabs>
+Generate the docker-compose file and environment secrets:
 
-You should see:
 ```bash
-Server listening on http://localhost:8069
+bunx scrawn@latest init
 ```
 
-When running locally, configure your SDK with:
-```typescript
-import { scrawn } from "@scrawn/core";
+This creates a `.scrawn/` directory with `scrawn.docker-compose.yml`, `scrawn.env`, and initialization SQL.
 
-const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: "http://localhost:8069", // [!code highlight]
-});
-```
-
-<Callout type="info" title="Development Mode">
-The `dev:backend` command runs with hot-reload enabled. Any code changes will automatically restart the server.
+<Callout type="info" title="Prerequisites">
+You need Docker and Docker Compose installed. The CLI uses them to run the infrastructure services.
 </Callout>
 
+### Start the Stack
 
-
-## Production Deployment
-
-### Railway Quickstart
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/o22nR_?referralCode=jdhNLd&utm_medium=integration&utm_source=template&utm_campaign=generic)
-
-### Requirements
-
-Before deploying, ensure you have:
-
-1. **A Node.js/Bun runtime environment** (Node 18+ or Bun 1.0+)
-
-2. **Required Environment Variables:**
-   ```bash
-   HMAC_SECRET=your_hmac_secret_here
-   DATABASE_URL=your_database_url_here
-   LEMON_SQUEEZY_API_KEY=your_api_key
-   LEMON_SQUEEZY_STORE_ID=your_store_id
-   LEMON_SQUEEZY_VARIANT_ID=your_variant_id
-   ```
-
-3. **Build Command:**
-   <Tabs items={['bun', 'npm', 'yarn']}>
-     <Tab value="bun">
-       ```bash
-       bun install
-       ```
-     </Tab>
-     <Tab value="npm">
-       ```bash
-       npm install
-       ```
-     </Tab>
-     <Tab value="yarn">
-       ```bash
-       yarn install
-       ```
-     </Tab>
-   </Tabs>
-
-4. **Start Command:**
-   <Tabs items={['bun', 'npm', 'yarn']}>
-     <Tab value="bun">
-       ```bash
-       bun run start
-       ```
-     </Tab>
-     <Tab value="npm">
-       ```bash
-       npm run start
-       ```
-     </Tab>
-     <Tab value="yarn">
-       ```bash
-       yarn start
-       ```
-     </Tab>
-   </Tabs>
-
-### Deployment Options
-
-Scrawn backend can be deployed to any platform that supports Node.js/Bun applications:
-
-- **Platform as a Service (PaaS):** Railway, Render, Fly.io, Heroku, etc.
-- **Container Platforms:** Docker, Kubernetes, AWS ECS, Google Cloud Run
-- **VPS/Dedicated Servers:** DigitalOcean, Linode, AWS EC2, etc.
-
-Most platforms will automatically detect the start command from your `package.json`. If not, use `bun run start` or `npm run start`.
-
-<Callout type="warn" title="Port Configuration">
-Scrawn backend runs on port **8069** by default. Some platforms require you to use a specific port via the `PORT` environment variable. The server will automatically use `process.env.PORT` if available.
-</Callout>
-
-### Using a Reverse Proxy (Recommended)
-
-For production deployments on a VPS or dedicated server, you should use a reverse proxy like Nginx or Caddy. This provides:
-
-- **SSL/TLS termination** for HTTPS
-- **Better security** by hiding your backend port
-- **Load balancing** capabilities
-- **Caching** and compression
-
-#### Example Nginx Configuration:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:8069;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+```bash
+bunx scrawn@latest start
 ```
 
-#### Example Caddy Configuration:
+This starts the full Scrawn stack — PostgreSQL, ClickHouse, the gRPC server, and the dashboard — with docker compose. All services run in the background.
 
-```txt
-your-domain.com {
-    reverse_proxy localhost:8069
-}
-```
-
-<Callout type="success" title="Why Reverse Proxy?">
-A reverse proxy handles SSL certificates, improves security, and lets you serve multiple apps from one server. It's the standard approach for production Node.js deployments.
-</Callout>
-
-### Understanding Base URLs
-
-The `baseURL` in your SDK configuration depends on how you've deployed:
-
-#### Development (Local)
-```typescript
-baseURL: 'http://localhost:8069'
-```
-
-#### Production with Reverse Proxy (Recommended)
-```typescript
-baseURL: 'https://your-domain.com'  // Your domain with SSL
-```
-
-#### Production on PaaS (Railway, Render, etc.)
-```typescript
-baseURL: 'https://your-app.platform-domain.com'  // URL provided by platform
-```
-
-#### Production without Reverse Proxy (Not Recommended)
-```typescript
-baseURL: 'http://your-server-ip:8069'  // ⚠️ Only for testing
-```
-
-<Callout type="warn" title="Always Use HTTPS in Production">
-Never expose your backend directly on HTTP in production. Always use HTTPS via a reverse proxy or platform SSL.
-</Callout>
-
-## Verifying Deployment
-
-After deployment, verify your backend is working:
+### Configure the SDK
 
 ```typescript
 import { scrawn } from "@scrawn/core";
 
 const biller = scrawn({
   apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
-  baseURL: "https://your-base-url",
+  baseURL: "http://localhost:8069",
 });
-
-try {
-  const result = await biller.collectPayment("test-user-id");
-  console.log("✅ Backend is working!", result);
-} catch (error) {
-  console.error('❌ Backend error:', error);
-}
 ```
 
-## Troubleshooting
+### Stop and Reset
 
-### Connection Issues
-- Verify the backend is running and accessible
-- Check if port 8069 is open (or your custom port)
-- Ensure firewall rules allow traffic
-- Verify reverse proxy configuration if applicable
-
-### Environment Variables
-- Double-check all required variables are set
-- Restart the server after adding/changing variables
-- On PaaS platforms, check the dashboard for environment settings
-
-### Database Connection
-- Verify your `DATABASE_URL` is correct
-- Ensure your database allows connections from your server's IP
-- Check SSL configuration for cloud databases
+```bash
+bunx scrawn@latest stop   # Graceful stop, preserves data
+bunx scrawn@latest reset  # Wipes all data volumes
+```
 
 ## Next Steps
 

@@ -23,14 +23,14 @@ const biller = scrawn({
 
 The factory accepts a single config object:
 
-| Param | Type | Default | Description |
-|---|---|---|---|
-| `apiKey` | `string` | — | Your Scrawn API key (starts with `scrn_`) |
-| `baseURL` | `string` | — | Base URL of your Scrawn backend (e.g. `http://localhost:8069`) |
-| `secure` | `boolean` | `true` | Whether to use TLS for gRPC. Set to `false` for local dev |
-| `tags` | `readonly string[]` | — | Known tag names for compile-time type checking on `biller.tag()` |
-| `expressions` | `readonly string[]` | — | Known expression names for compile-time type checking on `biller.expr()` |
-| `retryCount` | `number` | `2` | Auto-retry attempts on transient network errors. Set to `0` to disable |
+| Param | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `apiKey` | `string` | Yes | — | Your Scrawn API key (starts with `scrn_`) |
+| `baseURL` | `string` | Yes | — | Base URL of your Scrawn backend (e.g. `http://localhost:8069`) |
+| `secure` | `boolean` | No | `true` | Whether to use TLS for gRPC. Set to `false` for local dev |
+| `tags` | `readonly string[]` | No | — | Known tag names for compile-time type checking on `biller.tag()` |
+| `expressions` | `readonly string[]` | No | — | Known expression names for compile-time type checking on `biller.expr()` |
+| `retryCount` | `number` | No | `2` | Auto-retry attempts on transient network errors. Set to `0` to disable |
 
 ## Functions
 
