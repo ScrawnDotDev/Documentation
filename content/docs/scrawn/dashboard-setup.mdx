@@ -141,6 +141,43 @@ SCRAWN_KEY=scrn_YOUR_SCRAWN_KEY_HERE
   </Tab>
 </Tabs>
 
+## 5. Dashboard Onboarding
+
+When you first open the dashboard, you will enter an onboarding flow that requires your Dodo Payments API keys and Product IDs.
+
+### 5.1. Dodo API Keys
+
+To get your Dodo Live API Key and Dodo Test API Key:
+1. Go to the Dodo Payments dashboard.
+2. Navigate to **Developer > API Keys** in the sidebar.
+3. While in **Test Mode**, click **Add API Key** to generate your Test API key.
+4. Click the **Live Mode** toggle in the bottom left corner to switch environments.
+5. Generate your Live API key in the same way.
+
+![Dodo Mode Toggle](/Dodo%20Live%20Test.jpeg)
+
+Copy and paste both of these keys into the onboarding flow in your Scrawn Dashboard.
+
+### 5.2. Dodo Products
+
+Next, you need to create a product in Dodo to collect payments. You will need to create two products: one in **Test Mode** and one in **Live Mode**.
+
+1. In the Dodo Payments dashboard, navigate to **Products > Product** in the sidebar.
+2. Click to **Add New Product**.
+3. Fill in the Basic Details (Product Name, Brand, Tax Category, etc.). You can set these to whatever makes sense for your application.
+
+![Dodo Add Product](/DODO%20PRODUCT%201.png)
+
+4. Scroll down to the **Pricing** section.
+5. **CRITICAL STEP:** Ensure you select **One Time** pricing, and check the box for **Pay What You Want**. Set the **Minimum Price** to `$0`. (This is the only configuration value Scrawn strictly requires; the rest can be whatever you want).
+
+![Dodo Product Pricing Configuration](/DODO%20PRODUCT%202.png)
+
+6. Save the product and copy its **Product ID**. 
+7. Switch to the other environment mode (Test or Live) using the toggle in the bottom left, create the second product with the exact same Pay What You Want configuration, and copy its Product ID as well.
+
+Paste both the **Test Product ID** and **Live Product ID** into the respective fields in your Scrawn Dashboard onboarding flow to complete your setup.
+
 ## Creating a New API Key
 
 Once your dashboard is running, you can easily generate new API keys:
