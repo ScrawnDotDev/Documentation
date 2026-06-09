@@ -39,13 +39,18 @@ import { scrawn } from "@scrawn/core";
 import { TAGS, EXPRESSIONS } from "./pricerefs";
 
 export const biller = scrawn({
-  apiKey: process.env.SCRAWN_KEY,
-  baseURL: process.env.SCRAWN_BASE_URL,
-  httpUrl: process.env.SCRAWN_HTTP_URL,
+  apiKey: process.env.SCRAWN_KEY as `scrn_${string}`,
+  baseURL: "http://localhost:8060",
+  httpUrl: "http://localhost:8060",
+  // Run `bunx scrawn@latest tags sync` in your terminal
   tags: TAGS,
   expressions: EXPRESSIONS,
 });
 ```
+
+<Callout type="info">
+If you run the [backend](https://github.com/ScrawnDotDev/Scrawn) manually (without the bundled Docker stack), use port `8069` for `baseURL` and port `8070` for `httpUrl`.
+</Callout>
 
 ### Stop and Reset
 
